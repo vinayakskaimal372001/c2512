@@ -1,25 +1,17 @@
  Find the Largest Three Numbers and Check for String Palindrome
 
 
-FUNCTION findlargestthreenumbers(numbers)
-    IF length of numbers < 3 THEN
-        RETURN "List must contain at least three numbers"
+Function:  findLargest(num1, num2, num3)
+    
+    IF num1 >= num2 AND num1 >= num3 THEN
+        RETURN num1
+   
+    ELSE IF num2 >= num1 AND num2 >= num3 THEN
+        RETURN num2
+   
+    ELSE
+        RETURN num3
     END IF
 
-  
-    largest = second_largest = third_largest = minimum
-    FOR each number IN numbers DO
-        IF number > largest THEN
-            third_largest = second_largest
-            second_largest = largest
-            largest = number
-        ELSE IF number > second_largest THEN
-            third_largest = second_largest
-            second_largest = number
-        ELSE IF number > third_largest THEN
-            third_largest = number
-        END IF
-    END FOR
 
-    RETURN (largest, second_largest, third_largest)
 END FUNCTION
