@@ -29,3 +29,41 @@ int main()
 using namespace std;
 int calculateCube(int number)
 {
+return number*number*number;
+}
+void calculateCubeTest()
+{
+    int number,result;
+    cout << "Enter a number: ";
+    cin >> number;
+    result = calculateCube(number);
+    cout << "The cube of the number is: "<< result << endl;
+}
+int main()
+{
+    calculateCubeTest();
+    return 0;
+}
+
+3.print n natural numbers
+
+#include <iostream>
+using namespace std;
+void printNaturalNUmbers(int n)
+{
+    int i;
+    for(i=1;i<=n;i++)
+        cout << i << endl;
+}
+void printNaturalNUmbersTest()
+{
+    int n;
+    cout << "Enter number: ";
+    cin >> n;
+printNaturalNUmbers(n);
+}
+int main()
+{
+    printNaturalNUmbersTest();
+    return 0;
+}
