@@ -1,0 +1,31 @@
+1.average of two numbers
+
+#include <iostream>
+using namespace std;
+int findAverage(int number1,int number2)
+{
+    int average;
+    average = (number1 + number2)/ 2;
+    return average;
+}
+void findAverageTest()
+{
+    int number1,number2,result;
+    cout << "Enter the numbers: ";
+    cin >> number1;
+    cin >> number2;
+    result = findAverage(number1,number2);
+    cout << "The average is: " << result << endl;
+}
+int main()
+{
+    findAverageTest();
+    return 0;
+}
+
+2.cube of a number
+
+#include <iostream>
+using namespace std;
+int calculateCube(int number)
+{
