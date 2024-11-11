@@ -1,0 +1,173 @@
+
+function readSalaries(salaries -> [int], size -> int& )->int
+  salary = 0 -> float
+  for I = 0 to size-1
+     input salary
+     salaries [I] = salary
+   end for
+
+
+  
+function findSum(salaries -> [int], size -> int) -> int 
+  sum = 0 -> int
+  for I = 0 to size-1
+     sum += salaries [I]  
+  end for
+  return sum
+  
+function findAverage(salaries -> [int], size -> int) -> float
+  return findSum()/size
+    
+function isPrime(number -> int) -> bool 
+ for I = 2 to sqrt(number)
+    if number[I] % I == 0
+      return false
+    return true
+  
+
+  
+function findPrimeSalariesCount(salaries -> [int], size -> int) -> int 
+ primeCount = 0
+      for I = 0 to size - 1
+        if isPrime(salaries[I])
+             primeCount++
+        end if
+      end for
+ return  primeCount
+
+
+
+
+
+
+  
+function isNumberMinimum4Digit(number -> int) -> bool 
+  while number > 999
+       return true
+    end while
+  return false
+
+
+
+  
+function findMin4DigitSalariesCount(salaries -> [int], size -> int) -> int 
+    count = 0
+      for I = 0 to size - 1
+        if isNumberMinimum4Digit(salaries[I])
+            count++
+        end if
+      end for
+ return count
+
+
+
+  
+function findMaxSalary(salaries -> [int], size -> int) -> int 
+
+maxSalary = INT_MIN
+for I = 0 to size - 1
+        if maxSalary<salaries[I]
+           maxSalary = salaries[I]
+        end if
+ end for
+return maxSalary
+
+
+  
+function isOdd(number -> int) -> bool
+ 
+    if number % 2 != 0
+    
+      return true
+    end if
+    return false
+
+
+
+
+
+  
+function findSumOfOddSalaries(salaries -> [int], size -> int) -> int
+  sum = 0
+      for I = 0 to size - 1
+        if isOdd(salaries[I])
+            
+            sum += salaries[I]
+        end if
+      end for
+ return sum
+
+
+
+  
+function find2ndMinOddSalary(salaries -> [int], size -> int) -> int
+
+
+
+
+  
+function Test()
+ size = 0
+    readSalaries(salaries, size) 
+    averageSalary = findAverage(salaires, size)
+    primeSalariesCount = findPrimeSalariesCount(salaires, size)
+    min4DigitSalariesCount = findMin4DigitSalariesCount(salaires, size)
+    maxSalary = findMaxSalary(salaires, size)
+    sumOfOddSalaries = findSumOfOddSalaries(salaires, size)
+    secondMinOddSalary = find2ndMinOddSalary(salaires, size)
+    print averageSalary
+    print primeSalariesCount
+    print min4DigitSalariesCount
+    print maxSalary
+    print sumOfOddSalaries
+    print secondMinOddSalary
+      if isPrime(maxSalary) 
+          print "Max Salary is prime"
+      else 
+          print "Max Salary is not prime"  
+    
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  //salaries [int]
+    size = 0
+    readSalaries(salaries, size) 
+    averageSalary = findAverage(salaires, size)
+    primeSalariesCount = findPrimeSalariesCount(salaires, size)
+    min4DigitSalariesCount = findMin4DigitSalariesCount(salaires, size)
+    maxSalary = findMaxSalary(salaires, size)
+    sumOfOddSalaries = findSumOfOddSalaries(salaires, size)
+    secondMinOddSalary = find2ndMinOddSalary(salaires, size)
+    print averageSalary
+    print primeSalariesCount
+    print min4DigitSalariesCount
+    print maxSalary
+    print sumOfOddSalaries
+    print secondMinOddSalary
+    if isPrime(maxSalary) 
+        print "Max Salary is prime"
+    else 
+        print "Max Salary is not prime"
+pseudoMain )
+  
