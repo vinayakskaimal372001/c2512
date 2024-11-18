@@ -21,7 +21,7 @@ Bus Bookings : BookingID, CustomerID, ScheduleID, SeatNumber, BookingDate, Statu
 Bus Payments : PaymentID, BookingID, Amount, PaymentMethod, PaymentDate
 
 
-I am Nimisha, and I have booked tickets for my family for a bus journey from Tvm to Kozhikode on sleeper bus with bus no 201  
+I am vinayak, and I have booked tickets for my family for a bus journey from Tvm to Kozhikode on sleeper bus with bus no 201  
 operated by our travel agency
 travel_date: 2024-11-20, departure_time: 8:00 AM, arrival_time: 12:00 PM
 seat_numbers: [L1, L2, L3], each seat price is Rs.550
