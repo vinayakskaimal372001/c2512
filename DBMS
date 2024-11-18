@@ -307,7 +307,7 @@ UPDATE customers SET aadhaar_id = '5553 8420' WHERE CustomerID = 5;
 | 5          | Vishakh      | 555-7890      | vishakh@example.com     | 2024-11-10     | 5553 8420  
 
 
-1. Find the name and contact number of customers who booked seats but didn't make a payment.
+-> Find the name and contact number of customers who booked seats but didn't make a payment.
 
 SELECT Customer_Name, ContactNumber 
 FROM Customers 
@@ -317,7 +317,7 @@ WHERE CustomerID IN (
     WHERE BookingID NOT IN (SELECT BookingID FROM Payments)
 );
 
-2. Get the Bus Number and Type for buses that have scheduled routes starting from 'Ernakulam'.
+-> Get the Bus Number and Type for buses that have scheduled routes starting from 'Ernakulam'.
 
 SELECT BusNumber, Type 
 FROM Bus_Details 
@@ -327,7 +327,17 @@ WHERE BusID IN (
     WHERE DepartureLocation = 'Ernakulam'
 );
 
-3. Find the name of customers who booked seats and their total payment amount.
+-> Display bookings that are 'Not Booked' along with customer and route information.
+
+SELECT c.Customer_Name, r.Start_Location, r.End_Location, s.DepartureTime, s.ArrivalTime 
+FROM Bookings b
+JOIN Customers c ON b.CustomerID = c.CustomerID
+JOIN Bus_Schedules s ON b.ScheduleID = s.ScheduleID
+JOIN Bus_Routes r ON s.RouteID = r.RouteID
+WHERE b.BookingStatus = 'Not Booked';
+
+
+-> Find the name of customers who booked seats and their total payment amount.
 
 SELECT Customer_Name, 
        (SELECT SUM(Amount) 
@@ -337,7 +347,7 @@ FROM Customers
 JOIN Bookings ON Customers.CustomerID = Bookings.CustomerID;
 
 
-4. List all bookings with 'Booked' status where the payment amount exceeds 150.
+-> List all bookings with 'Booked' status where the payment amount exceeds 150.
 
 SELECT BookingID, CustomerID, SeatNumber 
 FROM Bookings b
@@ -348,7 +358,7 @@ AND EXISTS (
     WHERE p.BookingID = b.BookingID AND p.Amount > 150
 );
 
-5. Get the list of customers who have made payments, along with their payment details.
+-> Get the list of customers who have made payments, along with their payment details.
 
 SELECT c.Customer_Name, c.ContactNumber, p.Amount, p.PaymentMethod, p.PaymentDate 
 FROM Customers c 
@@ -356,14 +366,14 @@ JOIN Bookings b ON c.CustomerID = b.CustomerID
 JOIN Payments p ON b.BookingID = p.BookingID;
 
 
-6. Show the details of all bus schedules, including the bus type.
+-> Show the details of all bus schedules, including the bus type.
 
 SELECT s.ScheduleID, s.DepartureTime, s.ArrivalTime, s.DepartureLocation, s.ArrivalLocation, b.Type 
 FROM Bus_Schedules s 
 INNER JOIN Bus_Details b ON s.BusID = b.BusID;
 
 
-7. Display bookings that are 'Not Booked' along with customer and route information.
+-> Display bookings that are 'Not Booked' along with customer and route information.
 
 SELECT c.Customer_Name, r.Start_Location, r.End_Location, s.DepartureTime, s.ArrivalTime 
 FROM Bookings b
