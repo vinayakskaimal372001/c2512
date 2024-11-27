@@ -1,0 +1,143 @@
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+class LabTest {
+private:
+    string TestID;
+    double ResultValue;
+
+public:
+    // Constructor
+   
+    LabTest::LabTest(string p_TestID, double p_ResultValue)
+       {
+               TestID = p_TestID;
+               ResultValue = p_ResultValue;
+     }
+
+   
+
+    // Comparison methods
+    bool Equals(const LabTest& other) const {
+        return (TestID == other.TestID) && (ResultValue == other.ResultValue);
+    }
+
+    bool NotEquals(const LabTest& other) const {
+        return !Equals(other);
+    }
+
+    bool GreaterThan(const LabTest& other) const {
+        return ResultValue > other.ResultValue;
+    }
+
+    bool GreaterThanEquals(const LabTest& other) const {
+        return ResultValue >= other.ResultValue;
+    }
+
+    bool LessThan(const LabTest& other) const {
+        return ResultValue < other.ResultValue;
+    }
+
+    bool LessThanEquals(const LabTest& other) const {
+        return ResultValue <= other.ResultValue;
+    }
+};
+
+// Function to demonstrate the LabTest comparisons
+void testLabTestComparison() {
+    // Create two LabTest objects
+    LabTest test1("T123", 98.6);
+    LabTest test2("T124", 102.3);
+
+    // Display comparison results
+    cout << "Test1 Equals Test2: " << test1.Equals(test2) << endl;
+    cout << "Test1 NotEquals Test2: " << test1.NotEquals(test2) << endl;
+    cout << "Test1 GreaterThan Test2: " << test1.GreaterThan(test2) << endl;
+    cout << "Test1 GreaterThanEquals Test2: " << test1.GreaterThanEquals(test2) << endl;
+    cout << "Test1 LessThan Test2: " << test1.LessThan(test2) << endl;
+    cout << "Test1 LessThanEquals Test2: " << test1.LessThanEquals(test2) << endl;
+}
+
+int main() {
+
+
+    testLabTestComparison();
+    return 0;
+}
+
+
+---------------function outside classes--------------------------
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+class LabTest {
+private:
+    string TestID;
+    double ResultValue;
+
+public:
+    // Constructor
+    LabTest(string p_TestID, double p_ResultValue)
+        : TestID(p_TestID), ResultValue(p_ResultValue) {}
+
+    // Getter for TestID
+    string getTestID() const {
+        return TestID;
+    }
+
+    // Getter for ResultValue
+    double getResultValue() const {
+        return ResultValue;
+    }
+};
+
+// Comparison functions outside the class
+
+bool Equals(const LabTest& test1, const LabTest& test2) {
+    return (test1.getTestID() == test2.getTestID()) && (test1.getResultValue() == test2.getResultValue());
+}
+
+bool NotEquals(const LabTest& test1, const LabTest& test2) {
+    return !Equals(test1, test2);
+}
+
+bool GreaterThan(const LabTest& test1, const LabTest& test2) {
+    return test1.getResultValue() > test2.getResultValue();
+}
+
+bool GreaterThanEquals(const LabTest& test1, const LabTest& test2) {
+    return test1.getResultValue() >= test2.getResultValue();
+}
+
+bool LessThan(const LabTest& test1, const LabTest& test2) {
+    return test1.getResultValue() < test2.getResultValue();
+}
+
+bool LessThanEquals(const LabTest& test1, const LabTest& test2) {
+    return test1.getResultValue() <= test2.getResultValue();
+}
+
+// Function to demonstrate the LabTest comparisons
+void testLabTestComparison() {
+    // Create two LabTest objects
+    LabTest test1("T123", 98.6);
+    LabTest test2("T124", 102.3);
+
+    // Display comparison results
+    cout << "Test1 Equals Test2: " << Equals(test1, test2) << endl;
+    cout << "Test1 NotEquals Test2: " << NotEquals(test1, test2) << endl;
+    cout << "Test1 GreaterThan Test2: " << GreaterThan(test1, test2) << endl;
+    cout << "Test1 GreaterThanEquals Test2: " << GreaterThanEquals(test1, test2) << endl;
+    cout << "Test1 LessThan Test2: " << LessThan(test1, test2) << endl;
+    cout << "Test1 LessThanEquals Test2: " << LessThanEquals(test1, test2) << endl;
+}
+
+int main() {
+    // Run the test function to demonstrate comparisons
+    testLabTestComparison();
+    return 0;
+}
