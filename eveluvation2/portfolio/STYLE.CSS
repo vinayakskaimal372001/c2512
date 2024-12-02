@@ -1,0 +1,85 @@
+body {
+    background: #00162d;
+    font-family: 'Poppins', sans-serif;
+    background-color: linear-gradient(135deg, #044487, #021932);
+    margin: 0;
+    scroll-behavior: smooth;
+}
+
+.navbar {
+    background: linear-gradient(135deg, #07203ae1, #012348ee);
+    
+    color: white;
+}
+
+header {
+    background: linear-gradient(135deg, #007bff, #002c5b);
+    color: white;
+    padding: 80px 20px;
+  
+}
+
+.hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 60px 20px;
+    color:  #d8eafe;
+}
+
+.hero img {
+    width: 300px;
+    border-radius: 50%;
+    border: 5px ;
+}
+
+.btn-custom {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 30px;
+    transition: background 0.3s ease;
+}
+
+.btn-custom:hover {
+    background: #0056b3;
+    box-shadow: 0 5px 15px rgba(0, 91, 187, 0.5);
+}
+
+.section-title {
+    text-align: center;
+    font-size: 2.5rem;
+    color: #007bff;
+    margin: 40px 0;
+}
+
+.icon-row {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+.max{
+   color:#021932;
+    background: linear-gradient(135deg, #007bff, #002c5b);
+}
+
+.icon {
+    font-size: 4rem;
+    color: #007bff;
+    transition: transform 0.3s, color 0.3s;
+}
+
+.icon:hover {
+    transform: scale(1.2);
+    color: #0056b3;
+}
+
+footer {
+    background: linear-gradient(135deg, #032d5b, #021932);
+    color: white;
+}
+#home{
+    margin-top: 57px;
+}
