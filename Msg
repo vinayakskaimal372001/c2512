@@ -1,0 +1,84 @@
+#include <iostream>
+#include <unistd.h>
+#include <sys/msg.h>
+#include <sys/wait.h>
+#include <cstring>
+
+#define MSG_KEY 1234
+
+// Structure for the message queue
+struct msgbuf {
+    long mtype;
+    char mtext[1024];
+};
+
+// Client function
+void client(int& msgid) {
+    msgbuf message;
+    // Receiving the message
+    if (msgrcv(msgid, &message, sizeof(message.mtext), 0, 0) == -1) {
+        perror("Message receive error");
+        exit(1);
+    }
+    std::cout << "Received text: " << message.mtext << std::endl;
+}
+
+// Server function
+void server(int& msgid) {
+    msgbuf message;
+    message.mtype = 1;
+    strcpy(message.mtext, "Hello!");
+
+    // Sending the message
+    if (msgsnd(msgid, &message, sizeof(message.mtext), 0) == -1) {
+        perror("Message send failed");
+        exit(1);
+    }
+    std::cout << "Message sent successfully" << std::endl;
+}
+
+int main() {
+    // Creating a message queue
+    int msgid = msgget(MSG_KEY, 0666 | IPC_CREAT);
+    if (msgid == -1) {
+        perror("Message queue creation failed");
+        return 1;
+    }
+
+    // Forking child processes
+    pid_t pid1 = fork();
+    if (pid1 == -1) {
+        perror("Fork failed");
+        return 1;
+    }
+
+    if (pid1 == 0) {
+        // Child 1: Client
+        client(msgid);
+        return 0;
+    }
+
+    pid_t pid2 = fork();
+    if (pid2 == -1) {
+        perror("Fork failed");
+        return 1;
+    }
+
+    if (pid2 == 0) {
+        // Child 2: Server
+        server(msgid);
+        return 0;
+    }
+
+    // Parent process waits for both children
+    wait(nullptr);
+    wait(nullptr);
+
+    // Removing the message queue
+    if (msgctl(msgid, IPC_RMID, nullptr) == -1) {
+        perror("Message queue removal failed");
+        return 1;
+    }
+
+    return 0;
+}
