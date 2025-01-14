@@ -1,0 +1,103 @@
+#include <vector>
+#include <iostream>
+#include <numeric>
+#include <limits>
+#include <string>
+#include <thread>
+
+class LabTest
+{
+    std::string testid;
+    int resultValue;
+public:
+LabTest(std::string testid, int resultValue) : testid(testid), resultValue(resultValue) {}
+
+
+ int getResultValue() const{
+
+        return resultValue;
+}
+};
+
+// class LabTest {
+// private:
+//     std::string testid;
+//     int resultValue;
+
+// public:
+//     LabTest(std::string testid, int resultValue) : testid(testid), resultValue(resultValue) {}
+
+//     std::string gettestid() const {
+//         return testid
+
+
+//     int getResultValue() const {
+//         return resultValue;
+//     }
+// };
+
+
+
+
+
+void findMinFirstHalf(const std::vector<LabTest>& vec,int& min) {
+    min = std::numeric_limits<int>::max();
+    for (int i = 0; i < vec.size() / 2; i++) {
+if(vec[i].getResultValue() < min) {
+min = vec[i].getResultValue();
+}
+}
+}
+
+void findMaxSecondHalf(const std::vector<LabTest>& vec, int& max)
+{
+    max = std::numeric_limits<int>::min();
+for (int i = vec.size()/2; i<vec.size();i++) {
+if (vec[i].getResultValue() > max) {
+     max = vec[i].getResultValue();
+}
+}
+}
+
+void sumOfVector(const std::vector<LabTest>& vec, int& sum)
+{
+    sum = 0;
+   for (int i = 0; i<vec.size();i++)  {
+
+        sum += vec[i].getResultValue();
+
+
+}
+}
+
+int main()
+{
+
+   std::vector<LabTest> vec ={LabTest("a",1),LabTest("b",2), LabTest("c",3),LabTest("d",4),LabTest("e",5),LabTest("f",6),LabTest("g",7),LabTest("h",8),LabTest("i",9),LabTest("j",10)};
+
+
+    int sum = 0;
+
+
+    int min = 0, max = 0;
+
+//     sumOfVector(vec, ref(sum));
+// findMinFirstHalf(vec, ref(min));
+//     findMaxSecondHalf(vec, ref(max));
+
+   std::thread  thrsum(sumOfVector,vec,std::ref(sum));
+   std::thread thrfindMinFirstHalf(findMinFirstHalf,vec,std::ref(min));
+   std::thread thrfindMaxSecondHalf(findMaxSecondHalf,vec,std::ref(max));
+
+   thrfindMinFirstHalf.join();
+   thrsum.join();
+   thrfindMaxSecondHalf.join();
+
+
+std::cout << "accumulated value is__"<<sum << std::endl;
+    std::cout << "minimum value in 1sthalf :"<<min
+    << std::endl;
+    std::cout << "maximum in second half is- "<<max<<std::endl;
+
+    return 0;
+}
