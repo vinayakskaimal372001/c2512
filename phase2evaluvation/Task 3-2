@@ -12,26 +12,26 @@ using namespace std;
 class labTest {
 private:
 	string labTestId;
-	int result;
+	double result;
 
 public:
-	labTest(string labTestId, int result):labTestId(labTestId),result(result) {}
+	labTest(string labTestId, double result):labTestId(labTestId),result(result) {}
 
-	int getresult() {
+	double getresult() {
 		return result;
 	}
 };
 
-void findSum(int a[], int start, int end, int& sum) {
+void findSum(const std::vector<double>& vec, int start, int end, double& sum) {
 	for(int i = start; i < end; i++) {
-		sum += a[i];
+		sum += vec[i];
 	}
 }
 
 void client(vector<labTest>& vec, int& write_end_fd1, int& read_end_fd2) {
 	int size = vec.size();
 	write(write_end_fd1, &size, sizeof(size));
-	int buffer[size];
+	double buffer[size];
 	for(int i = 0; i < vec.size(); i++) {
 		buffer[i] = vec[i].getresult();
 	}
@@ -45,8 +45,8 @@ void client(vector<labTest>& vec, int& write_end_fd1, int& read_end_fd2) {
 	close(write_end_fd1);
 	sleep(2);
 
-	int sum = 0;
-	read(read_end_fd2, &sum, sizeof(int));
+	double sum = 0;
+	read(read_end_fd2, &sum, sizeof(double));
 
 	cout << "total sum : " << sum << endl;
 	close(read_end_fd2);
@@ -58,22 +58,26 @@ void server(int& read_end_fd1, int& write_end_fd2) {
 	int size;
 	read(read_end_fd1, &size, sizeof(size));
 
-	int a[size];
-	read(read_end_fd1, a, sizeof(int) * size);
+	double a[size];
+	read(read_end_fd1, a, sizeof(double) * size);
 
 	cout << "server ::" << endl;
 	close(read_end_fd1);
 
-	int sum1 = 0, sum2 = 0;
+	int s = sizeof(a) / sizeof(a[0]);
+	std::vector<double> vec(a, a + s);
+
+	double sum1 = 0, sum2 = 0;
 	int mid = size / 2;
 
-	thread t1(findSum, a, 0, mid, ref(sum1));
-	thread t2(findSum, a, mid, size, ref(sum2)); // Changed mid+1 to mid
+	thread t1(findSum, vec, 0, mid, ref(sum1));
+	thread t2(findSum, vec, mid, size, ref(sum2));
 
 	t1.join();
 	t2.join();
-
-	int totalSum = sum1 + sum2;
+	cout << "sum of first half: " << sum1 << endl;
+	cout << "sum of second half: " << sum2 << endl;
+	double totalSum = sum1 + sum2;
 	write(write_end_fd2, &totalSum, sizeof(totalSum));
 	cout << "sum sent : " << totalSum << endl;
 	close(write_end_fd2);
@@ -81,11 +85,11 @@ void server(int& read_end_fd1, int& write_end_fd2) {
 
 int main() {
 	vector<labTest> vec;
-	vec.emplace_back("vm1", 2);
-	vec.emplace_back("vm2", 5);
-	vec.emplace_back("vm3", 6);
-	vec.emplace_back("vm4", 3);
-	vec.emplace_back("vm5", 1);
+	vec.emplace_back("vm1", 2.0);
+	vec.emplace_back("vm2", 5.2);
+	vec.emplace_back("vm3", 6.0);
+	vec.emplace_back("vm4", 3.6);
+	vec.emplace_back("vm5", 1.8);
 
 	int pipe_fd1[2];
 	int pipe_fd2[2];
