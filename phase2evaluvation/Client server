@@ -88,11 +88,11 @@ int main() {
 	int sum = 0;
 	int min = INT_MAX;
 	int max = INT_MIN;
-	vec.emplace_back("am1",2);
-	vec.emplace_back("am2",5);
-	vec.emplace_back("am3",6);
-	vec.emplace_back("am4",3);
-	vec.emplace_back("am5",1);
+	vec.emplace_back("vm1",2);
+	vec.emplace_back("vm2",5);
+	vec.emplace_back("vm3",6);
+	vec.emplace_back("vm4",3);
+	vec.emplace_back("vm5",1);
 
     int pipe_fd1[2];
     int pipe_fd2[2];
