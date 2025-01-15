@@ -1,122 +1,136 @@
-
-
-#include<string>
-#include<thread>
-#include<algorithm>
-#include<unistd.h>
-#include<cstring>
-#include<iostream>
-#include<vector>
-#include<climits>
+#include <string>
+#include <thread>
+#include <algorithm>
+#include <unistd.h>
+#include <cstring>
+#include <iostream>
+#include <vector>
+#include <climits>
 
 using namespace std;
 
 class labTest {
 private:
-	string labTestId;
-	int result;
+    string labTestId;
+    int result;
 
 public:
-	labTest(string labTestId, int result):labTestId(labTestId),result(result) {}
+    labTest(string labTestId, int result) : labTestId(labTestId), result(result) {}
 
-	int getresult() {
-		return result;
-	}
+    int getresult() {
+        return result;
+    }
 };
 
-void findSum(const std::vector<int>& vec, int start, int end, int& sum) {
-	for(int i = start; i < end; i++) {
-		sum += vec[i];
-	}
+void findSum(const vector<int>& vec, int start, int end, int& sum) {
+    for (int i = start; i < end; i++) {
+        sum += vec[i];
+    }
 }
 
 void client(vector<labTest>& vec, int& write_end_fd1, int& read_end_fd2) {
-	int size = vec.size();
-	write(write_end_fd1, &size, sizeof(size));
-	int buffer[size];
-	for(int i = 0; i < vec.size(); i++) {
-		buffer[i] = vec[i].getresult();
-	}
-	write(write_end_fd1, buffer, sizeof(buffer));
+    int size = vec.size();
+    write(write_end_fd1, &size, sizeof(size)); // Send size
+    int buffer[size];
+    for (int i = 0; i < size; i++) {
+        buffer[i] = vec[i].getresult();
+    }
+    write(write_end_fd1, buffer, sizeof(buffer)); // Send array of results
 
-	cout << "client : ";
-	for(int i = 0; i < size; i++) {
-		cout << buffer[i] << " ";
-	}
-	cout << endl;
-	close(write_end_fd1);
-	sleep(2);
+    cout << "client: ";
+    for (int i = 0; i < size; i++) {
+        cout << buffer[i] << " ";
+    }
+    cout << endl;
 
-	int sum = 0,sum1,sum2;
-	read(read_end_fd2, &sum,&sum1,&sum2, sizeof(int),sizeof(int),sizeof(int));
+    close(write_end_fd1); // Close write end
 
-	cout << "total sum : " << sum <<":"<<sum1<<":"<<sum2<< endl;
-	close(read_end_fd2);
+    sleep(2);
+
+    int totalSum = 0, sum1 = 0, sum2 = 0;
+    read(read_end_fd2, &totalSum, sizeof(totalSum)); // Read total sum
+    read(read_end_fd2, &sum1, sizeof(sum1));         // Read sum1
+    read(read_end_fd2, &sum2, sizeof(sum2));         // Read sum2
+
+    cout << "total sum: " << totalSum << " (sum1: " << sum1 << ", sum2: " << sum2 << ")" << endl;
+    close(read_end_fd2); // Close read end
 }
 
 void server(int& read_end_fd1, int& write_end_fd2) {
-	sleep(1);
+    sleep(1);
 
-	int size;
-	read(read_end_fd1, &size, sizeof(size));
+    int size;
+    read(read_end_fd1, &size, sizeof(size)); // Read size
 
-	int a[size];
-	read(read_end_fd1, a, sizeof(int) * size);
+    int buffer[size];
+    read(read_end_fd1, buffer, sizeof(buffer)); // Read array of results
 
-	cout << "server ::" << endl;
-	close(read_end_fd1);
+    cout << "server: ";
+    for (int i = 0; i < size; i++) {
+        cout << buffer[i] << " ";
+    }
+    cout << endl;
 
-	int s = sizeof(a) / sizeof(a[0]);
-	std::vector<int> vec(a, a + s);
+    close(read_end_fd1); // Close read end
 
-	int sum1 = 0, sum2 = 0;
-	int mid = size / 2;
+    vector<int> vec(buffer, buffer + size); // Convert array to vector
 
-	thread t1(findSum, vec, 0, mid, ref(sum1));
-	thread t2(findSum, vec, mid, size, ref(sum2)); // Changed mid+1 to mid
+    int sum1 = 0, sum2 = 0;
+    int mid = size / 2;
 
-	t1.join();
-	t2.join();
-	int totalSum = sum1 + sum2;
-	write(write_end_fd2, &totalSum,&sum1,&sum2, sizeof(totalSum),sizeof(sum1),sizeof(sum2));
-	cout << "sum sent : " << totalSum << endl;
-	close(write_end_fd2);
+    thread t1(findSum, vec, 0, mid, ref(sum1));      // First half sum
+    thread t2(findSum, vec, mid, size, ref(sum2));  // Second half sum
+
+    t1.join();
+    t2.join();
+
+    int totalSum = sum1 + sum2;
+
+    write(write_end_fd2, &totalSum, sizeof(totalSum)); // Write total sum
+    write(write_end_fd2, &sum1, sizeof(sum1));         // Write sum1
+    write(write_end_fd2, &sum2, sizeof(sum2));         // Write sum2
+
+    cout << "sum sent: " << totalSum << endl;
+    close(write_end_fd2); // Close write end
 }
 
 int main() {
-	vector<labTest> vec;
-	vec.emplace_back("vm1", 2);
-	vec.emplace_back("vm2", 5);
-	vec.emplace_back("vm3", 6);
-	vec.emplace_back("vm4", 3);
-	vec.emplace_back("vm5", 1);
+    vector<labTest> vec;
+    vec.emplace_back("vm1", 2);
+    vec.emplace_back("vm2", 5);
+    vec.emplace_back("vm3", 6);
+    vec.emplace_back("vm4", 3);
+    vec.emplace_back("vm5", 1);
 
-	int pipe_fd1[2];
-	int pipe_fd2[2];
-	if(pipe(pipe_fd1) || pipe(pipe_fd2) == -1) {
-		perror("pipe");
-		cout << "pipe not created" << endl;
-		return 1;
-	}
+    int pipe_fd1[2]; // Pipe 1: client -> server
+    int pipe_fd2[2]; // Pipe 2: server -> client
 
-	pid_t pid;
-	{
-		pid = fork();
-		if(pid == 0) {
-			close(pipe_fd1[0]);
-			client(vec, pipe_fd1[1], pipe_fd2[0]);
-			return 0;
-		}
-	}
+    if (pipe(pipe_fd1) == -1 || pipe(pipe_fd2) == -1) {
+        perror("pipe");
+        return 1;
+    }
 
-	{	pid = fork();
-		if(pid == 0) {
-			close(pipe_fd1[1]);
-			server(pipe_fd1[0], pipe_fd2[1]);
-			return 0;
-		}
-	}
+    pid_t pid = fork();
+    if (pid == 0) {
+        close(pipe_fd1[0]); // Close read end of pipe 1 in client
+        close(pipe_fd2[1]); // Close write end of pipe 2 in client
+        client(vec, pipe_fd1[1], pipe_fd2[0]);
+        return 0;
+    }
 
-	sleep(3);
-	return 0;
+    pid = fork();
+    if (pid == 0) {
+        close(pipe_fd1[1]); // Close write end of pipe 1 in server
+        close(pipe_fd2[0]); // Close read end of pipe 2 in server
+        server(pipe_fd1[0], pipe_fd2[1]);
+        return 0;
+    }
+
+    close(pipe_fd1[0]);
+    close(pipe_fd1[1]);
+    close(pipe_fd2[0]);
+    close(pipe_fd2[1]);
+
+    sleep(3); // Allow time for child processes to complete
+    return 0;
 }
