@@ -41,7 +41,7 @@ buffer[i]=(vec[i].getresult());
 	buffer,
 	sizeof(buffer));
 	
-	cout << "client : " << buffer[1] << endl;
+	cout << "client : " << buffer << endl;
 	close(write_end_fd1);
 	sleep(2);
 
