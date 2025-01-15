@@ -1,0 +1,73 @@
+#include <iostream>
+#include <vector>
+#include <thread>
+#include <cstring>
+#include <string>
+
+using namespace std;
+
+class LabTest 
+{
+private:
+    string TestId;
+    double ResultValues;
+public:
+    LabTest(string id, double value) : TestId(id), ResultValues(value) {}
+
+    string getTestId() const { return TestId; }
+    double getResultValues() const { return ResultValues; }
+};
+
+void calculatePartialSum(const vector<double>& data, int start, int end, double& partialSum) {
+    partialSum = 0;
+    for (int i = start; i < end; ++i) {
+        partialSum += data[i];
+    }
+}
+
+void processData() {
+    vector<LabTest> tests = {
+        LabTest("T001", 10.0),
+        LabTest("T002", 20.0),
+        LabTest("T003", 30.0),
+        LabTest("T004", 40.0),
+        LabTest("T005", 50.0)
+    };
+
+    int size = tests.size();
+    vector<double> results(size);
+
+    // Extract results from LabTest objects
+    for (int i = 0; i < size; ++i) {
+        results[i] = tests[i].getResultValues();
+    }
+
+    cout << "Processing Result Values: ";
+    for (const auto& val : results) {
+        cout << val << " ";
+    }
+    cout << endl;
+
+    // Variables to hold partial sums
+    double firstHalfSum = 0, secondHalfSum = 0;
+
+    // Create threads for partial sum calculation
+    thread t1(calculatePartialSum, cref(results), 0, size / 2, ref(firstHalfSum));
+    thread t2(calculatePartialSum, cref(results), size / 2, size, ref(secondHalfSum));
+
+    // Join threads
+    t1.join();
+    t2.join();
+
+    // Combine results
+    double totalSum = firstHalfSum + secondHalfSum;
+
+    cout << "Sum of first half: " << firstHalfSum << endl;
+    cout << "Sum of second half: " << secondHalfSum << endl;
+    cout << "Total Sum: " << totalSum << endl;
+}
+
+int main() {
+    processData();
+    return 0;
+}
