@@ -71,7 +71,7 @@ void server(int& read_end_fd1,int& write_end_fd2){
 	a,
 	sizeof(int)*size);
 
-	cout << "server ..." << endl;
+	cout << "server ::" << endl;
 	close(read_end_fd1);
 	int s= 0; 
 	findSum(a,s);
