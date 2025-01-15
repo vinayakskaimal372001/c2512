@@ -1,9 +1,10 @@
 #include <iostream>
 #include <vector>
-#include <thread>
-#include <unistd.h>
 #include <climits>
-#include <cstring>
+#include <string>
+#include <thread>
+#include <future>
+#include <algorithm>
 
 using namespace std;
 
@@ -15,77 +16,51 @@ private:
 public:
     labTest(string labTestId, double result) : labTestId(labTestId), result(result) {}
 
-    double getresult() {
+    double getresult() const {
         return result;
     }
 };
 
-void calculatePartialSum(const double* data, int start, int end, double& partialSum) {
+void calculatePartialSum(const vector<double>& data, int start, int end, double& partialSum) {
     partialSum = 0;
     for (int i = start; i < end; ++i) {
         partialSum += data[i];
     }
 }
 
-void client(vector<labTest>& vec, int& write_end_fd1, int& read_end_fd2) {
-    int size = vec.size();
-    write(write_end_fd1, &size, sizeof(size)); // Send size to server
-
-    double buffer[size];
-    for (int i = 0; i < vec.size(); i++) {
-        buffer[i] = vec[i].getresult();
+void client(vector<labTest>& vec, promise<vector<double>>& dataPromise, future<double>& sumFuture) {
+    // Prepare data to send to the server
+    vector<double> buffer;
+    for (const auto& test : vec) {
+        buffer.push_back(test.getresult());
     }
+    cout << "Client: Sending data to server...\n";
+    dataPromise.set_value(buffer);
 
-    // Send data to server
-    write(write_end_fd1, buffer, sizeof(buffer));
-
-    cout << "Client sending result values: ";
-    for (int i = 0; i < size; i++) {
-        cout << buffer[i] << " ";
-    }
-    cout << endl;
-
-    close(write_end_fd1); // Close write end
-
-    // Read sum from server
-    double sum = 0;
-    read(read_end_fd2, &sum, sizeof(double));
-    cout << "Client received total sum: " << sum << endl;
-    close(read_end_fd2); // Close read end
+    // Wait for the result from the server
+    double sum = sumFuture.get();
+    cout << "Client: Received total sum from server: " << sum << endl;
 }
 
-void server(int& read_end_fd1, int& write_end_fd2) {
-    int size;
-    double buffer[100];
+void server(future<vector<double>>& dataFuture, promise<double>& sumPromise) {
+    // Receive data from the client
+    vector<double> data = dataFuture.get();
+    cout << "Server: Received data from client...\n";
 
-    // Read size from client
-    read(read_end_fd1, &size, sizeof(size));
-
-    // Read data from client
-    double a[size];
-    read(read_end_fd1, a, sizeof(double) * size);
-    close(read_end_fd1); // Close read end
-
-    cout << "Server received result values: ";
-    for (int i = 0; i < size; i++) {
-        cout << a[i] << " ";
-    }
-    cout << endl;
-
-    // Use threads to calculate partial sums
     double firstHalfSum = 0, secondHalfSum = 0;
-    thread t1(calculatePartialSum, a, 0, size / 2, ref(firstHalfSum));
-    thread t2(calculatePartialSum, a, size / 2, size, ref(secondHalfSum));
+
+    // Calculate partial sums in separate threads
+    thread t1(calculatePartialSum, cref(data), 0, data.size() / 2, ref(firstHalfSum));
+    thread t2(calculatePartialSum, cref(data), data.size() / 2, data.size(), ref(secondHalfSum));
 
     t1.join();
     t2.join();
 
     double totalSum = firstHalfSum + secondHalfSum;
-    cout << "Server calculated total sum: " << totalSum << endl;
+    cout << "Server: Calculated total sum: " << totalSum << endl;
 
-    // Send sum back to client
-    write(write_end_fd2, &totalSum, sizeof(totalSum));
-    close(write_end_fd2); // Close write end
+    // Send the result back to the client
+    sumPromise.set_value(totalSum);
 }
 
 int main() {
@@ -96,36 +71,19 @@ int main() {
     vec.emplace_back("am4", 3.43);
     vec.emplace_back("am5", 1.23);
 
-    int pipe_fd1[2], pipe_fd2[2];
+    // Create promises and futures for communication
+    promise<vector<double>> dataPromise;
+    future<vector<double>> dataFuture = dataPromise.get_future();
 
-    // Create pipes
-    if (pipe(pipe_fd1) == -1 || pipe(pipe_fd2) == -1) {
-        perror("Pipe creation failed");
-        return 1;
-    }
+    promise<double> sumPromise;
+    future<double> sumFuture = sumPromise.get_future();
 
-    int& read_end_fd1 = pipe_fd1[0];
-    int& write_end_fd1 = pipe_fd1[1];
-    int& write_end_fd2 = pipe_fd2[1];
-    int& read_end_fd2 = pipe_fd2[0];
+    // Start client and server threads
+    thread clientThread(client, ref(vec), ref(dataPromise), ref(sumFuture));
+    thread serverThread(server, ref(dataFuture), ref(sumPromise));
 
-    pid_t pid = fork();
-    if (pid == -1) {
-        perror("Fork failed");
-        return 1;
-    }
-
-    if (pid == 0) { // Child process (Client)
-        close(read_end_fd1);
-        close(write_end_fd2);
-        client(vec, write_end_fd1, read_end_fd2);
-        return 0;
-    } else { // Parent process (Server)
-        close(write_end_fd1);
-        close(read_end_fd2);
-        server(read_end_fd1, write_end_fd2);
-        wait(nullptr); // Wait for child to finish
-    }
+    clientThread.join();
+    serverThread.join();
 
     return 0;
 }
