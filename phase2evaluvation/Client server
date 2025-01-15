@@ -1,11 +1,13 @@
-#include<iostream>
-#include<vector>
-#include<climits>
+
 #include<string>
 #include<thread>
 #include<algorithm>
 #include<unistd.h>
 #include<cstring>
+#include<iostream>
+#include<vector>
+#include<climits>
+
 
 using namespace std;
 
@@ -33,7 +35,7 @@ void client( vector<labTest>& vec, int& write_end_fd1, int& read_end_fd2){
 	write(write_end_fd1, &size, 4);
 	int buffer[size];
 	for(int i = 0; i < vec.size(); i++){
-		buffer[i]=(vec[i].getresult());
+buffer[i]=(vec[i].getresult());
 	}
 	write(write_end_fd1,
 	buffer,
@@ -86,7 +88,6 @@ int main() {
 	int sum = 0;
 	int min = INT_MAX;
 	int max = INT_MIN;
-
 	vec.emplace_back("am1",2);
 	vec.emplace_back("am2",5);
 	vec.emplace_back("am3",6);
@@ -106,11 +107,6 @@ int main() {
         return 1;
     }
 
-    int& read_end_fd1 = pipe_fd1[0];
-    int& write_end_fd1 = pipe_fd1[1];
-    int& write_end_fd2 = pipe_fd2[1];
-    int& read_end_fd2 = pipe_fd2[0];
-
 
 
     pid_t pid = -1;
@@ -118,8 +114,8 @@ int main() {
     {
 		pid = fork();
         if(0==pid){
-			close(read_end_fd1);
-			client(vec,write_end_fd1,read_end_fd2);
+			close(pipe_fd1[0]);
+			client(vec,pipe_fd1[1],pipe_fd2[0]);
 			return 0;
 		}
     }
@@ -127,8 +123,8 @@ int main() {
 	{
 		pid = fork();
 		if(0==pid){
-			close(write_end_fd1);
-			server(read_end_fd1,write_end_fd2);
+			close(pipe_fd1[1]);
+			server( pipe_fd1[0],pipe_fd2[1]);
 			return 0;
 		}
 	}
