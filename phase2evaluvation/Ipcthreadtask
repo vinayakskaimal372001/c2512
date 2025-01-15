@@ -1,73 +1,161 @@
-#include <iostream>
-#include <vector>
-#include <thread>
-#include <cstring>
-#include <string>
+#include<iostream>
+#include<vector>
+#include<climits>
+#include<string>
+#include<thread>
+#include<algorithm>
+#include<unistd.h>
+#include<cstring>
 
 using namespace std;
 
-class LabTest 
-{
+class labTest {
 private:
-    string TestId;
-    double ResultValues;
-public:
-    LabTest(string id, double value) : TestId(id), ResultValues(value) {}
+	string labTestId;
+	double result;
 
-    string getTestId() const { return TestId; }
-    double getResultValues() const { return ResultValues; }
+public:
+	labTest(string labTestId, double result):labTestId(labTestId),result(result) {}
+
+	double getresult() {
+		return result;
+	}
 };
 
-void calculatePartialSum(const vector<double>& data, int start, int end, double& partialSum) {
+void calculatePartialSum(const double* data, int start, int end, double& partialSum) {
     partialSum = 0;
     for (int i = start; i < end; ++i) {
         partialSum += data[i];
     }
 }
 
-void processData() {
-    vector<LabTest> tests = {
-        LabTest("T001", 10.0),
-        LabTest("T002", 20.0),
-        LabTest("T003", 30.0),
-        LabTest("T004", 40.0),
-        LabTest("T005", 50.0)
-    };
 
-    int size = tests.size();
-    vector<double> results(size);
+void client( vector<labTest>& vec, int& write_end_fd1, int& read_end_fd2){
+	int size =vec.size();
+	write(write_end_fd1, &size, sizeof(size));
+	double buffer[size];
+	for(int i = 0; i < vec.size(); i++){
+		buffer[i]=(vec[i].getresult());
+	}
+	write(write_end_fd1,
+	buffer,
+	sizeof(buffer));
+	
+	cout << "client : " << buffer[1] << endl;
+	close(write_end_fd1);
+	sleep(2);
 
-    // Extract results from LabTest objects
-    for (int i = 0; i < size; ++i) {
-        results[i] = tests[i].getResultValues();
-    }
+	double sum=0;
+	read(read_end_fd2,
+	&sum,
+	sizeof(double));
 
-    cout << "Processing Result Values: ";
-    for (const auto& val : results) {
-        cout << val << " ";
-    }
-    cout << endl;
+	cout << "total sum : "<< sum << endl;
+	close(read_end_fd2);
 
-    // Variables to hold partial sums
-    double firstHalfSum = 0, secondHalfSum = 0;
 
-    // Create threads for partial sum calculation
-    thread t1(calculatePartialSum, cref(results), 0, size / 2, ref(firstHalfSum));
-    thread t2(calculatePartialSum, cref(results), size / 2, size, ref(secondHalfSum));
+}
 
-    // Join threads
+void server(int& read_end_fd1,int& write_end_fd2){
+	sleep(1);
+
+	int size;
+    double buffer[100];
+	read(read_end_fd1,
+	&size,
+	sizeof(size));
+
+	double a[size];
+
+	read(read_end_fd1,
+	a,
+	sizeof(double)*size);
+
+	cout << "server ..." << endl;
+	close(read_end_fd1);
+	double s= 0; 
+	 double firstHalfSum = 0, secondHalfSum = 0;
+   
+    
+    thread t1(calculatePartialSum,buffer, 0, size / 2, ref(firstHalfSum));
+    thread t2(calculatePartialSum,buffer, size / 2, size, ref(secondHalfSum));
+   cout<<"firstHalfSum"<<firstHalfSum<<endl;
+      cout<<"SecondHalfSum"<<secondHalfSum<<endl;
+
+  
     t1.join();
     t2.join();
+    
+     
+    s = firstHalfSum + secondHalfSum;
 
-    // Combine results
-    double totalSum = firstHalfSum + secondHalfSum;
+    cout << "Server calculated sum: " << s << endl;
 
-    cout << "Sum of first half: " << firstHalfSum << endl;
-    cout << "Sum of second half: " << secondHalfSum << endl;
-    cout << "Total Sum: " << totalSum << endl;
+    // Send sum back to client
+	write(write_end_fd2,
+	&s,
+	sizeof(s));
+	cout << "sum sent : " <<s<< endl;
+	close(write_end_fd2);
+
 }
 
 int main() {
-    processData();
-    return 0;
+	vector<labTest>vec;
+	double sum = 0;
+	double min = INT_MAX;
+	double max = INT_MIN;
+
+	vec.emplace_back("am1",2.45);
+	vec.emplace_back("am2",5.34);
+	vec.emplace_back("am3",6.56);
+	vec.emplace_back("am4",3.43);
+	vec.emplace_back("am5",1.23);
+
+    int pipe_fd1[2];
+    int pipe_fd2[2];
+    if(pipe(pipe_fd1)==-1){
+        perror("pipe");
+        cout << "pipe not created" << endl;
+        return 1;
+    }
+	if(pipe(pipe_fd2)==-1){
+        perror("pipe");
+        cout << "pipe not created" << endl;
+        return 1;
+    }
+
+    int& read_end_fd1 = pipe_fd1[0];
+    int& write_end_fd1 = pipe_fd1[1];
+    int& write_end_fd2 = pipe_fd2[1];
+    int& read_end_fd2 = pipe_fd2[0];
+
+
+
+    pid_t pid = -1;
+
+    {
+		pid = fork();
+        if(0==pid){
+			close(read_end_fd1);
+			client(vec,write_end_fd1,read_end_fd2);
+			return 0;
+		}
+    }
+
+	{
+		pid = fork();
+		if(0==pid){
+			close(write_end_fd1);
+			server(read_end_fd1,write_end_fd2);
+			return 0;
+		}
+	}
+
+
+	sleep(3);
+
+	return 0;
+
+
 }
