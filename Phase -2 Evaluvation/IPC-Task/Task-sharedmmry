@@ -1,91 +1,129 @@
 #include <iostream>
-#include <vector>
+#include <unistd.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/wait.h>
-#include <unistd.h>
+#include <cstring>
+#include <vector>
 
-using namespace std;
+#define SHM_KEY 1234
 
 class Vaccination {
-private:
-    string VaccinationId;
-    int DoseAdministered;
 public:
-    Vaccination(string id, int dose) : VaccinationId(id), DoseAdministered(dose) {}
+    std::string VaccinationId;
+    int DoseAdministered;
 
+    Vaccination(std::string id, int dose) : VaccinationId(id), DoseAdministered(dose) {}
+
+    std::string getVaccinationId() const { return VaccinationId; }
     int getDoseAdministered() const { return DoseAdministered; }
 };
 
 struct SharedMemory {
-    int size;
-    int doses[100];
+    int doses[5];
     int sum;
+    bool dataReady;       
+    bool serverDone;      
 };
 
-void client(SharedMemory* shared_mem) {
-    vector<Vaccination> vacc = {
-        Vaccination("P001", 4), 
-        Vaccination("P002", 5), 
-        Vaccination("P003", 6), 
-        Vaccination("P004", 15), 
+void client(int& shmid) { 
+    SharedMemory* sharedMem = (SharedMemory*)shmat(shmid, nullptr, 0);
+
+   
+    std::vector<Vaccination> vacc = {
+        Vaccination("P001", 4),
+        Vaccination("P002", 5),
+        Vaccination("P003", 6),
+        Vaccination("P004", 15),
         Vaccination("P005", 1)
     };
 
-    shared_mem->size = vacc.size();
-    for (int i = 0; i < shared_mem->size; ++i) {
-        shared_mem->doses[i] = vacc[i].getDoseAdministered();
+    
+    for (int i = 0; i < 5; ++i) {
+        sharedMem->doses[i] = vacc[i].getDoseAdministered();
     }
 
-    cout << "Client sending doses: ";
-    for (int i = 0; i < shared_mem->size; ++i) {
-        cout << shared_mem->doses[i] << " ";
+    std::cout << "Client sent doses: ";
+    for (int i = 0; i < 5; ++i) {
+        std::cout << sharedMem->doses[i] << " ";
     }
-    cout << endl;
+    std::cout << std::endl;
+
+    
+    sharedMem->dataReady = true;
+
+    
+    while (!sharedMem->serverDone) {
+        sleep(1);  
+    }
+
+  
+    std::cout << "Client received sum from server: " << sharedMem->sum << std::endl;
+
+    shmdt(sharedMem);
 }
 
-void server(SharedMemory* shared_mem) {
-    int sum = 0;
+void server(int& shmid) { 
+    SharedMemory* sharedMem = (SharedMemory*)shmat(shmid, nullptr, 0);
 
-    for (int i = 0; i < shared_mem->size; ++i) {
-        sum += shared_mem->doses[i];
+
+    while (!sharedMem->dataReady) {
+        sleep(1);  
     }
 
-    shared_mem->sum = sum;
-    cout << "Server calculated sum: " << sum << endl;
+    
+    std::cout << "Server received doses: ";
+    for (int i = 0; i < 5; ++i) {
+        std::cout << sharedMem->doses[i] << " ";
+    }
+    std::cout << std::endl;
+
+   
+    sharedMem->sum = 0;
+    for (int i = 0; i < 5; ++i) {
+        sharedMem->sum += sharedMem->doses[i];
+    }
+
+    std::cout << "Server calculated sum: " << sharedMem->sum << std::endl;
+
+   
+    sharedMem->serverDone = true;
+
+    shmdt(sharedMem);
 }
 
 int main() {
-    key_t key = ftok("shmfile", 65);  // Create a unique key for shared memory
-    int shmid = shmget(key, sizeof(SharedMemory), 0666 | IPC_CREAT);
+ 
+    int shmid = shmget(SHM_KEY, sizeof(SharedMemory), 0666 | IPC_CREAT);
+
     if (shmid == -1) {
-        perror("Shared memory creation failed");
+        std::cerr << "Shared memory allocation failed!" << std::endl;
         return 1;
     }
 
-    SharedMemory* shared_mem = (SharedMemory*) shmat(shmid, nullptr, 0);
-    if (shared_mem == (SharedMemory*) -1) {
-        perror("Shared memory attachment failed");
-        return 1;
-    }
-
+    {
     pid_t pid = fork();
-    if (pid == -1) {
-        perror("Fork failed");
-        return 1;
+        if (pid == 0) {
+            server(shmid);
+            shmctl(shmid, IPC_RMID, nullptr);  
+            return 0;
+        }
     }
 
-    if (pid == 0) {  // Child process (Client)
-        client(shared_mem);
-        shmdt(shared_mem);  // Detach from shared memory
-        exit(0);
-    } else {  // Parent process (Server)
-        wait(nullptr);  // Wait for child process
-        server(shared_mem);
-        cout << "Server sent sum: " << shared_mem->sum << endl;
-        shmdt(shared_mem);  // Detach from shared memory
-        shmctl(shmid, IPC_RMID, nullptr);  // Remove shared memory
+   
+    sleep(1);
+    {
+        int pid = fork();
+        if (pid == 0) {
+            
+            client(shmid);
+            return 0;
+        }
     }
+
+    
+    wait(nullptr);
+    wait(nullptr);
 
     return 0;
 }
