@@ -85,7 +85,6 @@ int main() {
         perror("Message queue creation failed");
         return 1;
     }
-
     {
         int pid = fork();
         if (pid == 0) {
@@ -93,7 +92,7 @@ int main() {
             return 0;
         }
     }
-
+    
     {
         int pid = fork();
         if (pid == 0) {
@@ -101,7 +100,6 @@ int main() {
             return 0;
         }
     }
-
     wait(nullptr);
     wait(nullptr);
 
