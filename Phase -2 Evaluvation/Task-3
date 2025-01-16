@@ -1,0 +1,142 @@
+#include<iostream>
+#include<vector>
+#include<climits>
+#include<string>
+#include<thread>
+#include<algorithm>
+#include<unistd.h>
+#include<cstring>
+
+using namespace std;
+
+class labTest {
+private:
+	string labTestId;
+	double result;
+
+public:
+	labTest(string labTestId, double result):labTestId(labTestId),result(result) {}
+
+	double getresult() {
+		return result;
+	}
+};
+
+void findSum(double a[],double& sum) {
+	for(int i = 0; i<5; i++) {
+		sum = sum + a[i];
+	}
+}
+
+void client( vector<labTest>& vec, int& write_end_fd1, int& read_end_fd2){
+	int size =vec.size();
+	write(write_end_fd1, &size, sizeof(size));
+	double buffer[size];
+	for(int i = 0; i < vec.size(); i++){
+		buffer[i]=(vec[i].getresult());
+	}
+	write(write_end_fd1,
+	buffer,
+	sizeof(buffer));
+	
+	cout << "client : " << buffer[1] << endl;
+	close(write_end_fd1);
+	sleep(2);
+
+	double sum=0;
+	read(read_end_fd2,
+	&sum,
+	sizeof(double));
+
+	cout << "total sum : "<< sum << endl;
+	close(read_end_fd2);
+
+
+}
+
+void server(int& read_end_fd1,int& write_end_fd2){
+	sleep(1);
+
+	int size;
+
+	read(read_end_fd1,
+	&size,
+	sizeof(size));
+
+	double a[size];
+
+	read(read_end_fd1,
+	a,
+	sizeof(double)*size);
+
+	cout << "server ..." << endl;
+	close(read_end_fd1);
+	double s= 0; 
+	findSum(a,s);
+	write(write_end_fd2,
+	&s,
+	sizeof(s));
+	cout << "sum sent : " <<s<< endl;
+	close(write_end_fd2);
+
+}
+
+int main() {
+	vector<labTest>vec;
+	double sum = 0;
+	double min = INT_MAX;
+	double max = INT_MIN;
+
+	vec.emplace_back("am1",2.45);
+	vec.emplace_back("am2",5.34);
+	vec.emplace_back("am3",6.56);
+	vec.emplace_back("am4",3.43);
+	vec.emplace_back("am5",1.23);
+
+    int pipe_fd1[2];
+    int pipe_fd2[2];
+    if(pipe(pipe_fd1)==-1){
+        perror("pipe");
+        cout << "pipe not created" << endl;
+        return 1;
+    }
+	if(pipe(pipe_fd2)==-1){
+        perror("pipe");
+        cout << "pipe not created" << endl;
+        return 1;
+    }
+
+    int& read_end_fd1 = pipe_fd1[0];
+    int& write_end_fd1 = pipe_fd1[1];
+    int& write_end_fd2 = pipe_fd2[1];
+    int& read_end_fd2 = pipe_fd2[0];
+
+
+
+    pid_t pid = -1;
+
+    {
+		pid = fork();
+        if(0==pid){
+			close(read_end_fd1);
+			client(vec,write_end_fd1,read_end_fd2);
+			return 0;
+		}
+    }
+
+	{
+		pid = fork();
+		if(0==pid){
+			close(write_end_fd1);
+			server(read_end_fd1,write_end_fd2);
+			return 0;
+		}
+	}
+
+
+	sleep(3);
+
+	return 0;
+
+
+}
