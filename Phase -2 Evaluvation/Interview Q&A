@@ -1,0 +1,779 @@
+Interview questions
+
+------------------------------------------------------------------------------------------------------------------------
+1. What all topics did we study in each phase. 
+------------------------------------------------------------------------------------------------------------------------
+2. Write a C++ program to store employee details. And 3 functions, Add, Display, Remove. Using structure array as data member. 
+
+    #include <iostream>
+    #include <string>
+
+    using namespace std;
+
+    struct Employee {
+        int id;
+        string name;
+        string position;
+    };
+
+    class EmployeeManager {
+    private:
+        Employee employees[100];
+        int count;
+
+    public:
+        EmployeeManager() : count(0) {}
+
+        void Add() {
+            if (count < 100) {
+                cout << "Enter Employee ID: ";
+                cin >> employees[count].id;
+                cout << "Enter Employee Name: ";
+                cin >> employees[count].name;
+                cout << "Enter Employee Position: ";
+                cin >> employees[count].position;
+                count++;
+            } else {
+                cout << "Employee list is full." << endl;
+            }
+        }
+
+        void Display() {
+            for (int i = 0; i < count; i++) {
+                cout << "ID: " << employees[i].id << ", Name: " << employees[i].name 
+                    << ", Position: " << employees[i].position << endl;
+            }
+        }
+
+        void Remove(int id) {
+            for (int i = 0; i < count; i++) {
+                if (employees[i].id == id) {
+                    for (int j = i; j < count - 1; j++) {
+                        employees[j] = employees[j + 1];
+                    }
+                    count--;
+                    cout << "Employee with ID " << id << " removed." << endl;
+                    return;
+                }
+            }
+            cout << "Employee not found." << endl;
+        }
+    };
+
+    int main() {
+        EmployeeManager manager;
+        int choice, id;
+
+        while (true) {
+            cout << "1. Add Employee\n2. Display Employees\n3. Remove Employee\n4. Exit\n";
+            cout << "Enter your choice: ";
+            cin >> choice;
+
+            switch (choice) {
+                case 1:
+                    manager.Add();
+                    break;
+                case 2:
+                    manager.Display();
+                    break;
+                case 3:
+                    cout << "Enter Employee ID to remove: ";
+                    cin >> id;
+                    manager.Remove(id);
+                    break;
+                case 4:
+                    return 0;
+                default:
+                    cout << "Invalid choice. Please try again." << endl;
+            }
+        }
+    }
+------------------------------------------------------------------------------------------------------------------------
+3. /*---MFC---*/Asked about all the files in MFC, what is the use of every file. Flow of MFC execution. What is OnPaint(), InitDialog(), CAboutDlg, etc. 
+------------------------------------------------------------------------------------------------------------------------
+4. We have a Base class with a member function display() which will print "A" when called. And a Derived class ( from Base ) which has another display() function which will print "B". (There is no virtual class used in code). We made an object of Derived, using the object of Derived class we need to print both "A" of base class and "B" of Derived class. We can update the class part and cannot update the int main(). How to display both. 
+    #include <iostream>
+    using namespace std;
+
+    class Base {
+    public:
+        void display() {
+            cout << "A" << endl;
+        }
+    };
+
+    class Derived : public Base {
+    public:
+        void display() {
+            cout << "B" << endl;
+        }
+    };
+
+    int main() {
+        Derived obj;
+
+            obj.display(); // Output: B
+
+        obj.Base::display(); // Output: A
+
+        return 0;
+    }
+
+------------------------------------------------------------------------------------------------------------------------
+5. Write a program to replace all spaces in a given string with underscores using a loop.
+    #include <iostream>
+    #include <string>
+
+    int main() {
+        std::string input;
+        std::cout << "Enter a string: ";
+        std::getline(std::cin, input);
+
+        for (size_t i = 0; i < input.length(); ++i) {
+            if (input[i] == ' ') {
+                input[i] = '_';
+            }
+        }
+
+        std::cout << "Modified string: " << input << std::endl;
+        return 0;
+    }
+
+------------------------------------------------------------------------------------------------------------------------
+6. Design a base class Vehicle and derived classes Car and Bike. Override a function to show specific vehicle details using runtime polymorphism.
+    #include <iostream>
+    using namespace std;
+
+    class Vehicle {
+    public:
+        virtual void showDetails() {
+            cout << "This is a vehicle." << endl;
+        }
+    };
+
+    class Car : public Vehicle {
+    public:
+        void showDetails() override {
+            cout << "This is a car." << endl;
+        }
+    };
+
+    class Bike : public Vehicle {
+    public:
+        void showDetails() override {
+            cout << "This is a bike." << endl;
+        }
+    };
+
+    int main() {
+        Vehicle* v1 = new Car();
+        Vehicle* v2 = new Bike();
+
+        v1->showDetails();
+        v2->showDetails();
+
+        delete v1;
+        delete v2;
+
+        return 0;
+    }
+
+------------------------------------------------------------------------------------------------------------------------
+7. Explain static functions in C++ with examples.
+    #include <iostream>
+
+    class Example {
+    public:
+        static void staticFunction() {
+            std::cout << "This is a static function." << std::endl;
+        }
+
+        void nonStaticFunction() {
+            std::cout << "This is a non-static function." << std::endl;
+        }
+    };
+
+    int main() {
+        // Calling static function without creating an object
+        Example::staticFunction();
+
+        // Creating an object to call non-static function
+        Example obj;
+        obj.nonStaticFunction();
+
+        return 0;
+    }
+
+------------------------------------------------------------------------------------------------------------------------
+8. Provide an example of operator overloading in C++.
+    #include <iostream>
+
+    class Complex {
+    private:
+        float real;
+        float imag;
+
+    public:
+        Complex(float r = 0, float i = 0) : real(r), imag(i) {}
+
+        // Overloading the + operator
+        Complex operator+(const Complex& obj) {
+            return Complex(real + obj.real, imag + obj.imag);
+        }
+
+        void display() {
+            std::cout << real << " + " << imag << "i" << std::endl;
+        }
+    };
+
+    int main() {
+        Complex c1(3.5, 2.5);
+        Complex c2(1.5, 4.5);
+        Complex c3 = c1 + c2; // Using overloaded + operator
+
+        c3.display(); // Output: 5.0 + 7.0i
+        return 0;
+    }
+
+------------------------------------------------------------------------------------------------------------------------
+9. Explain oops concepts.
+    OOP Concepts :
+    Major pillars::
+    1. Encapsulation:
+    Definition: Encapsulation is the bundling of data (variables) and methods (functions) that operate on the data into a single unit, typically a class. It also involves restricting access to the internal details of the class, exposing only necessary parts through public methods.
+    Protects data from unauthorized access.
+    Improves modularity and maintainability.
+    Implementation in C++:
+    Use private or protected access specifiers for data members.
+    Provide public getter and setter functions to access or modify the data.
+    2.2. Inheritance:
+    Definition: Inheritance is a mechanism where a class (derived class) inherits properties and behaviors (data members and member functions) from another class (base class). This promotes reusability and establishes a relationship between classes.
+    Types of Inheritance:
+    Single, Multiple, Multilevel, Hierarchical, Hybrid.
+    Why Inheritance?
+    Avoid code duplication by reusing base class functionality.
+    Supports hierarchical classifications.
+    Implementation in C++:
+    Use the : symbol followed by public, protected, or private inheritance
+    Polymorphism means "many forms." It allows the same operation or function to behave differently based on the context
+    Compile-Time Polymorphism:
+    Achieved through function overloading and operator overloading.
+    Determined during the compilation phase.
+    Run-Time Polymorphism:
+    Achieved through function overriding using virtual functions.
+    Determined during program execution using dynamic dispatch.
+    Allows flexibility in code by enabling one interface for different implementations.
+    Implementation in C++:
+    Compile-Time: Function overloading.
+    Run-Time: Virtual functions and overriding.
+    4. Abstraction:
+    Definition: Abstraction is the process of hiding the implementation details of a class and exposing only the essential features.
+    Reduces complexity by focusing on high-level design.
+    Protects the implementation from external interference.
+    Implementation in C++:
+    Achieved using abstract classes (classes with at least one pure virtual function) or interfaces.
+------------------------------------------------------------------------------------------------------------------------
+10. What is abstraction and implement it in  the code.
+    #include <iostream>
+    using namespace std;
+
+    class Shape {
+    public:
+        virtual void draw() = 0; // Pure virtual function
+    };
+
+    class Circle : public Shape {
+    public:
+        void draw() {
+            cout << "Drawing a Circle" << endl;
+        }
+    };
+
+    class Square : public Shape {
+    public:
+        void draw() {
+            cout << "Drawing a Square" << endl;
+        }
+    };
+
+    int main() {
+        Shape* shape1 = new Circle();
+        Shape* shape2 = new Square();
+
+        shape1->draw();
+        shape2->draw();
+
+        delete shape1;
+        delete shape2;
+
+        return 0;
+    }
+------------------------------------------------------------------------------------------------------------------------
+11. Explain about virtual function, run time polymorphism.
+    #include <iostream>
+    using namespace std;
+
+    class Base {
+    public:
+        virtual void show() {
+            cout << "Base class show function called." << endl;
+        }
+    };
+
+    class Derived : public Base {
+    public:
+        void show() override {
+            cout << "Derived class show function called." << endl;
+        }
+    };
+
+    int main() {
+        Base* b;           // Base class pointer
+        Derived d;        // Derived class object
+        b = &d;           // Pointing to Derived class object
+
+        b->show();        // Calls Derived's show() due to run-time polymorphism
+
+        return 0;
+    }
+
+------------------------------------------------------------------------------------------------------------------------
+12. Usage of public, private, protected in the code.
+    #include <iostream>
+    using namespace std;
+
+    class Base {
+    protected:
+        int protectedVar;
+
+    public:
+        Base() : protectedVar(10) {}
+
+        void showProtected() {
+            cout << "Protected Variable: " << protectedVar << endl;
+        }
+    };
+
+    class Derived : public Base {
+    private:
+        int privateVar;
+
+    public:
+        Derived() : privateVar(20) {}
+
+        void showPrivate() {
+            cout << "Private Variable: " << privateVar << endl;
+        }
+
+        void showAll() {
+            showProtected();
+            showPrivate();
+        }
+    };
+
+    int main() {
+        Derived obj;
+        obj.showAll();
+        return 0;
+    }
+
+------------------------------------------------------------------------------------------------------------------------
+13. Explain about STL.
+
+    STL is a library that consist of different data structures and algorithms to effectively store and manipulate data.
+    If we say that data structures store data, we can say that algorithms are used to solve different problems, often by searching through and manipulating those data structures.
+    Using the right data structure and algorithm makes your program run faster, especially when working with lots of data. 
+
+    The most common data structures are:
+
+    Data Structure	Description
+    Vector	        Stores elements like an array but can dynamically change in size. Adding and removing of elements are usually done at the end. Elements can be accessed by index.
+    List	        Stores elements sequentially, where each element is connected to the next. Adding and removing of elements can be done at both ends. Not accessible by index.
+    Stack	        Stores elements in a specific order, called LIFO (Last In, First Out), where elements can only be added and removed from the top. Not accessible by index.
+    Queue	        Stores elements in a specific order, called FIFO (First In, First Out), where elements are added at the end and removed from the front. Not accessible by index.
+    Deque	        Stores elements in a double-ended queue, where elements can be added and removed from both ends. Elements can be accessed by index.
+    Set             Stores unique elements. Not accessible by index.
+    Map             Stores elements in "key/value" pairs. Accessible by keys (not by index).
+
+------------------------------------------------------------------------------------------------------------------------
+14. Explain Friend function and how it is implemented in the code.
+    # Friend Function in C++
+
+    #include <iostream>
+    using namespace std;
+
+    class Box {
+    private:
+        int length;
+
+    public:
+        Box(int l) : length(l) {}
+
+        // Friend function declaration
+        friend void printLength(Box box);
+    };
+
+    // Friend function definition
+    void printLength(Box box) {
+        cout << "Length of box: " << box.length << endl;
+    }
+
+    int main() {
+        Box box(10);
+        printLength(box);
+        return 0;
+    }
+
+------------------------------------------------------------------------------------------------------------------------
+15. What is typedef and write syntax.
+    The typedef keyword in C++ is used to create an alias for an existing data type, making code more readable and easier to manage
+    Syntax: typedef existing_type new_type_name;
+
+------------------------------------------------------------------------------------------------------------------------
+16. Explain Data structure.
+
+    Data structures are used to store and organize data. An array is an example of a data structure, which allows multiple elements to be stored in a single variable.
+    C++ includes many other data structures as well, each is used to handle data in different ways.
+
+------------------------------------------------------------------------------------------------------------------------
+17. Stack and queue
+    #include <iostream>
+    #include <stack>
+    #include <queue>
+
+    int main() {
+        // Stack example
+        std::stack<int> myStack;
+        myStack.push(1);
+        myStack.push(2);
+        myStack.push(3);
+        
+        std::cout << "Stack elements: ";
+        while (!myStack.empty()) {
+            std::cout << myStack.top() << " ";
+            myStack.pop();
+        }
+        std::cout << std::endl;
+
+        // Queue example
+        std::queue<int> myQueue;
+        myQueue.push(1);
+        myQueue.push(2);
+        myQueue.push(3);
+        
+        std::cout << "Queue elements: ";
+        while (!myQueue.empty()) {
+            std::cout << myQueue.front() << " ";
+            myQueue.pop();
+        }
+        std::cout << std::endl;
+
+        return 0;
+    }
+
+------------------------------------------------------------------------------------------------------------------------
+18. What is the difference between Structure and class in CPP.
+
+    Structure
+
+    A structure is a grouping of variables of various data types referenced by the same name. A structure declaration serves as a template for creating an instance of the structure.
+
+    Syntax:
+    The syntax of the structure is as follows:
+
+    Struct Structurename  
+    {  
+        Struct_member1;  
+        Struct_member2;  
+        Struct_member3;  
+        .  
+        .  
+        .  
+        Struct_memberN;  
+    };  
+    The "struct" keyword indicates to the compiler that a structure has been declared. The "structurename" defines the name of the structure. Since the structure declaration is treated as a statement, so it is often ended by a semicolon.
+
+
+    What is Class in C++?
+    A class in C++ is similar to a C structure in that it consists of a list of data members and a set of operations performed on the class. In other words, a class is the building block of Object-Oriented programming. It is a user-defined object type with its own set of data members and member functions that can be accessed and used by creating a class instance. A C++ class is similar to an object's blueprint.
+
+    Syntax:
+    The structure and the class are syntactically similar. The syntax of class in C++ is as follows:
+
+    class class_name  
+    {  
+        // private data members and member functions.  
+        Access specifier;  
+        Data member;  
+        Member functions (member list){ . . }  
+    };  
+    In this syntax, the class is a keyword to indicate the compiler that a class has been declared. OOP's main function is data hiding, which is achieved by having three access specifiers: "public", "private", and "safe". If no access specifier is specified in the class when declaring data members or member functions, they are all considered private by default.
+
+    The public access specifier allows others to access program functions or data. A member of that class may reach only the class's private members. During inheritance, the safe access specifier is used. If the access specifier is declared, it cannot be changed again in the program.
+
+
+
+------------------------------------------------------------------------------------------------------------------------
+19. Use of abstraction. How to make a class abstract and what is its use.
+
+    #include <iostream>
+    using namespace std;
+
+    class Abstract {
+    public:
+        virtual void showDetails() = 0; // Pure virtual function
+    };
+
+    class Implementation : public Abstract {
+    public:
+        void showDetails() override { cout << "Details\n"; }
+    };
+
+    int main() {
+        Abstract* obj = new Implementation();
+        obj->showDetails();
+        delete obj;
+        return 0;
+    }
+
+------------------------------------------------------------------------------------------------------------------------
+20. Real time example for oops concepts.
+
+    Core OOPs Concepts:
+    Object
+    Class
+    Abstraction
+    Encapsulation
+    Inheritance
+    Polymorphism
+    Let's discuss each OOP concept with a real-world example.
+
+    1. Object
+    An Object is a real-time entity having some state and behavior. In Java, an Object is an instance of the class having instance variables (state) and methods (behavior). The object of a class can be created by using the new keyword in the Java Programming language.
+
+    A class is a template or blueprint from which objects are created. So, an object is the instance (result) of a class.
+
+    Various Definitions of an Object:
+
+    An object is a real-world entity.
+    An object is a runtime entity.
+    An object is an entity that has a state and behavior.
+    An object is an instance of a class.
+    Real-world examples:
+
+    Dogs have states (name, color, breed, hungry) and behaviors (barking, fetching, wagging tail). Other examples include Chairs, Bikes, Markers, Pens, Tables, Cars, Books, Apples, Bags, etc. These can be physical or logical (tangible and intangible). Object Example
+    Bicycles also have states (current gear, current pedal cadence, current speed) and behaviors (changing gear, changing pedal cadence, applying brakes). 
+    Read more about Objects in Java with examples at What Is Object in Java with Programming Examples.
+
+    2. Class
+    A class is a group of objects that have common properties. It is a template or blueprint from which objects are created. In short, a class is the specification or template of an object.
+
+    Read more about Class in Java with examples at What is Class in Java with Programming Examples.
+
+    Real-world example: Circle Let’s look at an example of a class and analyze its various parts in the below diagram. This example declares the class Circle, which has the member variables x, y, and radius of type Integer and the two member methods, area() and fillColor().
+
+    The below diagram shows a Circle class, which is a template for creating three objects: Class is a template for creating objects
+
+    3. Abstraction
+    Abstraction means hiding lower-level details and exposing only the essential and relevant details to the users.
+
+    Real-world examples:
+
+    Car: A car abstracts the internal details and exposes to the driver only those details that are relevant to the driver's interaction with the car. Car Abstraction Example
+    ATM Machine: An ATM machine allows users to perform operations like cash withdrawal, money transfer, and retrieving mini-statements without knowing the internal details of the ATM. ATM Abstraction Example
+    Read more about Abstraction in Java with examples at Abstraction in Java with Example.
+
+    4. Encapsulation
+    Encapsulation is the process of wrapping data and methods in a single unit.
+
+    In OOP, data and methods operating on that data are combined together to form a single unit, which is referred to as a Class. Encapsulation is the mechanism that binds together code and the data it manipulates and keeps both safe from outside interference and misuse.
+
+    Real-world examples:
+
+    Capsule: A capsule wraps different medicines inside it. Encapsulation Example
+    Read more at Encapsulation in Java with Example.
+
+    5. Inheritance
+    Inheritance is a process of obtaining the data members and methods from one class to another class. It is a fundamental feature of object-oriented programming.
+
+    Inheritance - IS-A relationship between a superclass and its subclasses.
+
+    Super Class: The class whose features are inherited is known as a superclass (or a base class or a parent class).
+    Sub Class: The class that inherits the other class is known as a subclass (or a derived class, extended class, or child class
+    ). The subclass can add its own fields and methods in addition to the superclass fields and methods.
+
+    Real-world examples:
+
+    Child and Parent: All the properties of a father are inherited by his son. Inheritance Example
+    Java Library: The extensive use of inheritance in the Java library. For example, the Number class abstracts various numerical (reference) types such as Byte, Integer, Float, Double, Short, and BigDecimal. Inheritance in Java Core
+    Read more about Inheritance at Inheritance in Java with Example.
+
+    6. Polymorphism
+    Polymorphism is the process of representing one form in multiple forms.
+
+    Definitions of Polymorphism:
+
+    Polymorphism allows us to perform a single action in different ways.
+    Polymorphism allows you to define one interface and have multiple implementations.
+    We can create functions or reference variables that behave differently in different programmatic contexts.
+    Polymorphism means many forms.
+    Real-world example: Suppose if you are in a classroom at that time you behave like a student, when you are in the market at that time you behave like a customer, and when you are at home at that time you behave like a son or daughter. Here one person presents different behaviors in different contexts. 
+------------------------------------------------------------------------------------------------------------------------
+
+21. Const keyword
+The `const` keyword is used to define constants or protect variables from being modified. It can also be used to define constant member functions, parameters, and pointers.
+
+Code Example:
+#include <iostream>
+using namespace std;
+
+void printConst(const int value) {
+    // value = 20; // Error: value is read-only
+    cout << "Value is: " << value << endl;
+}
+
+int main() {
+    const int x = 10;
+    // x = 20; // Error: x is read-only
+    printConst(x);
+    return 0;
+}
+
+22. OOPs Concept with Code
+Object-Oriented Programming (OOP) consists of four main pillars:
+1. Encapsulation: Bundling data and methods into a single unit (class).
+2. Inheritance: Acquiring properties of another class.
+3. Polymorphism: Using a single interface for different data types.
+4. Abstraction: Hiding implementation details and exposing functionality.
+
+Code Example:
+#include <iostream>
+using namespace std;
+
+// Base class
+class Animal {
+public:
+    virtual void sound() { // Polymorphism (virtual function)
+        cout << "Animal makes a sound" << endl;
+    }
+};
+
+// Derived class
+class Dog : public Animal { // Inheritance
+public:
+    void sound() override {
+        cout << "Dog barks" << endl;
+    }
+};
+
+int main() {
+    Animal *a;
+    Dog d;
+    a = &d;
+    a->sound(); // Polymorphism: Calls Dog's sound()
+    return 0;
+}
+
+23. Operator Overloading Code Example
+Operator overloading allows operators to have user-defined meanings for specific data types.
+
+Code Example:
+#include <iostream>
+using namespace std;
+
+class Complex {
+private:
+    float real, imag;
+public:
+    Complex(float r = 0, float i = 0) : real(r), imag(i) {}
+
+    // Overload + operator
+    Complex operator + (const Complex& c) {
+        return Complex(real + c.real, imag + c.imag);
+    }
+
+    void display() {
+        cout << real << " + " << imag << "i" << endl;
+    }
+};
+
+int main() {
+    Complex c1(3.5, 2.5), c2(1.5, 4.5);
+    Complex c3 = c1 + c2; // Using overloaded +
+    c3.display();
+    return 0;
+}
+
+24. Set Minimum Balance in Code for Bank
+This program enforces a minimum balance and prevents withdrawal if it leads to a balance below the minimum.
+
+Code Example:
+#include <iostream>
+using namespace std;
+
+class BankAccount {
+private:
+    float balance;
+    static const float MIN_BALANCE;
+
+public:
+    BankAccount(float initialBalance) {
+        if (initialBalance >= MIN_BALANCE)
+            balance = initialBalance;
+        else {
+            balance = MIN_BALANCE;
+            cout << "Initial balance too low. Set to minimum balance of " << MIN_BALANCE << endl;
+        }
+    }
+
+    void withdraw(float amount) {
+        if (balance - amount >= MIN_BALANCE) {
+            balance -= amount;
+            cout << "Withdrawal successful. Remaining balance: " << balance << endl;
+        } else {
+            cout << "Cannot withdraw. Balance would drop below minimum of " << MIN_BALANCE << endl;
+        }
+    }
+
+    void displayBalance() const {
+        cout << "Current balance: " << balance << endl;
+    }
+};
+
+const float BankAccount::MIN_BALANCE = 1000.0; // Minimum balance
+
+int main() {
+    BankAccount account(500); // Sets balance to minimum
+    account.displayBalance();
+
+    account.withdraw(200); // Fails
+    account.withdraw(50);  // Succeeds
+    account.displayBalance();
+
+    return 0;
+}
+
+25. Replace Space in a String with an Underscore
+Replacing spaces with underscores is a common task.
+
+Code Example:
+#include <iostream>
+#include <string>
+using namespace std;
+
+int main() {
+    string str = "Hello World! This is C++.";
+
+    // Replace spaces with underscores
+    for (char &c : str) {
+        if (c == ' ')
+            c = '_';
+    }
+
+    cout << "Modified string: " << str << endl;
+    return 0;
+}
+
+******************************************************************
+
+
