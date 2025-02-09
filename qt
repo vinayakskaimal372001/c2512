@@ -1,1 +1,558 @@
 https://github.com/voidrealms/qt6-core-beginners/tree/main/section%2011/qt6cb-11-5
+
+ QT ->libraries witten in C++
+major parts:
+-core: non visual classes
+-widgets: older GUI runs on desktop
+-QML: newer GUI runs anywhere
+
+QT -> Run anywhere 
+used to build 
+-Console
+-Mobile
+-Embedded 
+-Desktop
+-Anything 
+Integrate Development Environment
+QT Creator
+
+
+c++ QT build process
+
+-Preprocessor
+-QT Moc
+-Compiler
+-Linker
+-Finished binary
+
+How does Qt modify the normal build process
+by running moc(meta object compiler)
+
+QT uses C++
+for 
+Standard Library
+Replicates part of STD
+-Pointers
+-Class and inheritance
+-template
+-lack of error handling
+-Object copies are forbidden
+
+
+prime focuss on 
+-Variables
+-Pointers
+-Memory
+-Class
+-Inheritance
+
+
+
+q)What kit will we be using in this course? ans->Desktop
+
+q)What does MOC do during the build process? ans ->generate c++code in background
+
+->hello world in qt creator
+------main.cpp----
+
+#include <QCoreApplication>
+#include <QDebug>
+
+int main(int argc,char *argv[])
+{
+
+   QCoreApplication a(argc,argv);
+   qInfo() <<"Hello world";
+
+   return a.exec();
+   
+}
+
+
+comments // and /* */ and /*! */
+
+
+variables
+
+#include <QCoreApplication>
+#include <QDebug>
+
+int main(int argc,char *argv[])
+{
+
+   QCoreApplication a(argc,argv);
+bool LightSwitch =false;
+   qInfo() <<"Is on"<<LightSwitch;
+
+   return a.exec();
+   
+}
+
+
+
+
+Classes
+setObjectName
+->for naming
+eg:
+cat.setObjectName("Kitty"); 
+
+
+
+
+
+QWidgets
+
+
+signals slots
+
+#ifndef DIALOG_H
+#define DIALOG_H
+
+#include <QDialog>
+#include <QDebug>
+#include <QDateTime>
+
+QT_BEGIN_NAMESPACE
+namespace Ui { class Dialog; }
+QT_END_NAMESPACE
+
+class Dialog : public QDialog
+{
+    Q_OBJECT
+
+public:
+    Dialog(QWidget *parent = nullptr);
+    ~Dialog();
+
+private slots:
+    void doStuff();
+
+    void on_btnEditor_clicked();
+
+private:
+    Ui::Dialog *ui;
+};
+#endif // DIALOG_H
+
+
+
+#include "dialog.h"
+#include "ui_dialog.h"
+
+Dialog::Dialog(QWidget *parent)
+    : QDialog(parent)
+    , ui(new Ui::Dialog)
+{
+    ui->setupUi(this);
+
+    connect(ui->btnConnect, &QPushButton::clicked, this, &Dialog::doStuff);
+
+}
+
+Dialog::~Dialog()
+{
+    delete ui;
+}
+
+void Dialog::doStuff()
+{
+    qInfo() << "Clicked " << QDateTime::currentDateTime().toString();
+    accept(); // WILL CLOSE !!!
+}
+
+
+void Dialog::on_btnEditor_clicked()
+{
+    qDebug() << "EXTRA STUFF!!!!";
+    doStuff();
+}
+
+
+
+#include "dialog.h"
+
+#include <QApplication>
+
+int main(int argc, char *argv[])
+{
+    QApplication a(argc, argv);
+    Dialog w;
+    w.show();
+    return a.exec();
+}
+
+
+What is a QDialog?
+
+QDialog is a class in QT that provide a dialog window,
+
+which is a secondary window used to interact with the user . used commonly for popups, forms,confirmation message and input dialogs.
+
+pointer
+stack-reginal storage and heap- free stor
+
+stack
+Stack
+Memory Allocation: Stack memory is used for static memory allocation. Variables are allocated and deallocated automatically.
+Lifetime: The lifetime of variables is limited to the scope in which they are defined. Once the scope ends, the memory is freed.
+Speed: Access to stack memory is faster because it follows a Last In, First Out (LIFO) order.
+Size: The size of the stack is usually limited and smaller compared to the heap.
+Usage: Typically used for local variables, function parameters, and control flow.
+
+
+qt core signals
+
+with ui just drag and value changed(int) to set value(int) only needed 
+
+using code
+inside under ui->setup(this)
+connect(sender,signal,receiverofsignal,slot)
+ connect(ui->horizontalSlider,SIGNAL(valueChanged(int)),
+            ui->progressBar,SLOT(setValue(int)));
+
+to break signals and slots
+
+    disconnect(ui->horizontalSlider,SIGNAL(valueChanged(int)),
+            ui->progressBar,SLOT(setValue(int)));
+
+
+or se[erately using source and destination also we can make signals and slots
+
+->source.h
+
+#ifndef SOURCE_H
+#define SOURCE_H
+
+#include <QObject>
+
+class Source : public QObject
+{
+    Q_OBJECT
+public:
+    explicit Source(QObject *parent = nullptr);
+
+    void test();
+
+signals:
+    void mySignal(QString message);
+};
+
+#endif // SOURCE_H
+
+->source.cpp
+
+#include "source.h"
+
+Source::Source(QObject *parent) : QObject(parent)
+{
+
+}
+
+void Source::test()
+{
+    emit mySignal("Hello world!");
+}
+
+
+
+
+->destination.h
+
+#ifndef DESTINATION_H
+#define DESTINATION_H
+
+#include <QObject>
+#include <QDebug>
+
+class Destination : public QObject
+{
+    Q_OBJECT
+public:
+    explicit Destination(QObject *parent = nullptr);
+
+signals:
+    void arrived();
+
+public slots:
+    void mySlot(QString message);
+
+};
+
+#endif // DESTINATION_H
+
+->d.cpp
+
+#include "destination.h"
+
+Destination::Destination(QObject *parent) : QObject(parent)
+{
+
+}
+
+void Destination::mySlot(QString message)
+{
+    qInfo() << message;
+}
+
+
+
+->main.cpp
+
+#include <QCoreApplication>
+#include "source.h"
+#include "destination.h"
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication a(argc, argv);
+
+    Source oSource;
+    Destination oDestination;
+
+    QObject::connect(&oSource,&Source::mySignal,&oDestination,&Destination::mySlot);
+
+    //oSource.test();
+    oDestination.mySlot("HI!"
+
+
+);
+
+    return a.exec();
+}
+
+
+
+
+
+Qtimer
+
+
+Qobjects
+
+inside main.cpp we can use Qobject::connect(&
+  QObject::connect(&dog,&Dog::bark,&cat,&Cat::scared);
+       QObject::connect(&cat,&Cat::run,&dog,&Dog::chase);
+
+       emit dog.bark();
+
+
+Qinttypes
+using typedef they changed
+
+ //typedef - remake a type
+
+    qint8 value8 = 0;
+    qint16 value16 = 0;
+    qint32 value32 = 0;
+    qint64 value64 = 0;
+    qintptr valueptr = 0;
+
+    qInfo() << "value8" << sizeof(value8);
+    qInfo() << "value16" << sizeof(value16);
+    qInfo() << "value32" << sizeof(value32);
+    qInfo() << "value64" << sizeof(value64);
+    qInfo() << "valueptr" << sizeof(valueptr);
+
+size will be
+
+Qtime Qdate
+Qdatetime
+currentdate
+
+
+ QDate today = QDate::currentDate();
+    qInfo() << today;
+    qInfo() << today.addDays(1);
+    qInfo() << today.addYears(20);
+
+    //Different than Qt 5
+    //qInfo() << today.toString(Qt::DateFormat::SystemLocaleDate);
+
+    qInfo() << "ISODate" << today.toString(Qt::DateFormat::ISODate);
+    qInfo() << "RFC2822Date" << today.toString(Qt::DateFormat::RFC2822Date);
+    qInfo() << "TextDate" << today.toString(Qt::DateFormat::TextDate);
+
+    QTime now = QTime::currentTime();
+    qInfo() << "ISODate" << now.toString(Qt::DateFormat::ISODate);
+    qInfo() << "RFC2822Date" << now.toString(Qt::DateFormat::RFC2822Date);
+    qInfo() << "TextDate" << now.toString(Qt::DateFormat::TextDate);
+
+    QDateTime current = QDateTime::currentDateTime();
+
+    qInfo() << current;
+    QDateTime expire = current.addDays(45);
+    qInfo() << "Expire on" << expire;
+
+
+    if(current > expire)
+    {
+        qInfo() << "Expired!";
+    }
+    else
+    {
+        qInfo() << "Not Expired!";
+    }
+
+
+
+Qstring
+
+ QString name = "Bryan Cairns";
+    qInfo() << name;
+    qInfo() << name.mid(1,3);
+    qInfo() << name.insert(0,"Mr. ");
+    qInfo() << name.split(" ");
+
+    int index = name.indexOf(" ");
+    if(index > -1)
+    {
+        qInfo() << name.remove(0, index).trimmed();
+    }
+
+    QString title = "Teacher";
+    QString full = name.trimmed() + " " + title;
+    qInfo() << full;
+
+    qInfo() << full.toUtf8();
+
+    test(full);
+
+
+QByteArray
+
+#include <QCoreApplication>
+#include <QDebug>
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication a(argc, argv);
+
+    QString greeting = "Hello World!";
+    QByteArray buffer(greeting.toUtf8());
+    buffer.append("!");
+    qInfo() << buffer;
+
+    qInfo() << buffer.rightJustified(20,'.');
+    qInfo() << buffer.at(buffer.length() - 1);
+
+    QString modified(buffer);
+    qInfo() << modified;
+
+    //Basic encoding and decoding
+    qInfo() << buffer.toBase64();
+    qInfo() << buffer.toHex();
+
+
+    return a.exec();
+}
+
+
+
+any datatype QVariant
+
+#include <QCoreApplication>
+#include <QDebug>
+#include <QVariant>
+
+void test(QVariant value) //Copy
+{
+    qInfo() << value;
+
+    int i = 0;
+    bool ok = false;
+    i = value.toInt(&ok);
+    if(ok)
+    {
+        qInfo() << "INT" << i;
+    }
+    else
+    {
+        qInfo() << "Not a int!";
+    }
+}
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication a(argc, argv);
+
+    QVariant value  = 1;
+    QVariant value2 = "Hello World";
+
+    test(value);
+    test(value2);
+
+    return a.exec();
+}
+
+
+Qstringlist 
+QString data = "Hello world how are you";
+    QStringList lst = data.split(" ");
+    qInfo() << lst;
+
+    foreach(QString str,lst)
+    {
+        qInfo() << str;
+    }
+
+    lst.sort(Qt::CaseInsensitive);
+    qInfo() << lst;
+
+    QString myvar = "Hello";
+    if(lst.contains(myvar))
+    {
+        int index = lst.indexOf(myvar);
+        qInfo() << lst.value(index);
+    }
+
+
+
+Qlist
+
+
+    QString data = "Hello world how are you";
+    QList<QString> list = data.split(" ");
+
+    foreach(QString word, list)
+    {
+        qInfo() << word;
+    }
+
+    QList<int> age({44,56,21,13});
+    age.append(99);
+    age.remove(1);
+    qInfo() << age;
+
+    foreach(int word, age)
+    {
+        qInfo() << word;
+    }
+
+    return a.exec();
+
+Qvector is alias of Qlist
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
