@@ -1,5 +1,286 @@
 https://github.com/voidrealms/qt6-core-beginners/tree/main/section%2011/qt6cb-11-5
+___________________________
 
+# Qt Core - Detailed Notes with Code Examples
+
+## 1. Introduction to Qt
+### What is Qt?
+Qt is a cross-platform C++ framework used for developing applications that run on **desktop, mobile, and embedded systems**. 
+It provides a set of libraries and tools for GUI and non-GUI development.
+
+### Major Components of Qt
+1. **Qt Core** - Provides essential non-GUI classes (event loops, file handling, threads, etc.).
+2. **Qt Widgets** - Older GUI system based on C++.
+3. **Qt Quick (QML)** - Modern GUI system that supports animations and mobile applications.
+
+### Qt Can Be Used For
+- Console applications
+- Desktop applications
+- Embedded systems
+- Mobile applications
+
+### Qt Creator - Integrated Development Environment (IDE)
+Qt Creator is the official IDE for Qt development, offering:
+- Project management
+- Code editing
+- Debugging tools
+- Graphical UI design (for Qt Widgets and Qt Quick)
+
+---
+
+## 2. Qt Build Process
+When building a Qt application, the following steps occur:
+
+1. **Preprocessor** - Handles #include directives and macros.
+2. **MOC (Meta-Object Compiler)** - Generates extra C++ code for handling Qt-specific features like signals and slots.
+3. **Compiler** - Compiles the generated C++ code.
+4. **Linker** - Combines compiled files into a final executable.
+
+### What is MOC?
+MOC (Meta-Object Compiler) is a Qt tool that:
+- Processes Qt-specific C++ extensions.
+- Generates additional C++ code for classes using Q_OBJECT, signals, slots, and properties.
+
+> **Q) What does MOC do during the build process?**  
+> **A) It generates C++ code in the background.**
+
+---
+
+## 3. Hello World in Qt Core
+**Example: Simple Console Application**
+```cpp
+#include <QCoreApplication>
+#include <QDebug>
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication a(argc, argv);
+    qInfo() << "Hello, World!";
+    return a.exec();
+}
+```
+- `QCoreApplication` - Manages event loops for non-GUI applications.
+- `qInfo()` - Prints debug information to the console.
+
+---
+
+## 4. Qt Core Essentials
+
+### 4.1 QObject Class
+QObject is the base class for all Qt objects. It provides:
+- Event handling
+- Signals and slots
+- Object hierarchy (parent-child relationships)
+
+**Example: Setting Object Name**
+```cpp
+#include <QCoreApplication>
+#include <QDebug>
+#include <QObject>
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication a(argc, argv);
+
+    QObject cat;
+    cat.setObjectName("Kitty");
+
+    qInfo() << "Object Name:" << cat.objectName();
+
+    return a.exec();
+}
+```
+
+---
+
+### 4.2 Signals and Slots
+Qt uses **signals and slots** for event-driven programming.  
+
+- **Signals** are emitted when an event occurs.
+- **Slots** are functions that respond to signals.
+- **connect()** links a signal to a slot.
+
+**Example: Button Click Simulation**
+```cpp
+#include <QCoreApplication>
+#include <QObject>
+#include <QDebug>
+
+class Source : public QObject
+{
+    Q_OBJECT
+public:
+    explicit Source(QObject *parent = nullptr) {}
+
+    void test()
+    {
+        emit mySignal("Hello, Qt!");
+    }
+
+signals:
+    void mySignal(QString message);
+};
+
+class Destination : public QObject
+{
+    Q_OBJECT
+public:
+    explicit Destination(QObject *parent = nullptr) {}
+
+public slots:
+    void mySlot(QString message)
+    {
+        qInfo() << "Received Signal:" << message;
+    }
+};
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication a(argc, argv);
+
+    Source sender;
+    Destination receiver;
+
+    QObject::connect(&sender, &Source::mySignal, &receiver, &Destination::mySlot);
+
+    sender.test(); // Emits signal
+
+    return a.exec();
+}
+```
+
+---
+
+## 5. Qt Timer Example
+Qt provides QTimer for scheduling repetitive tasks.
+
+**Example: Using QTimer**
+```cpp
+#include <QCoreApplication>
+#include <QTimer>
+#include <QDebug>
+
+void printMessage()
+{
+    qInfo() << "Timer executed!";
+}
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication a(argc, argv);
+
+    QTimer timer;
+    QObject::connect(&timer, &QTimer::timeout, &printMessage);
+    timer.start(1000); // Executes every second
+
+    return a.exec();
+}
+```
+
+---
+
+## 6. Basic Qt Data Types
+
+### 6.1 Qt Integer Types
+Qt provides specific integer types for cross-platform consistency:
+```cpp
+qint8 value8 = 0;
+qint16 value16 = 0;
+qint32 value32 = 0;
+qint64 value64 = 0;
+qintptr valueptr = 0;
+
+qInfo() << "Size of qint32:" << sizeof(value32);
+```
+
+### 6.2 QDate, QTime, QDateTime
+Used for handling date and time.
+
+**Example: Get Current Date and Time**
+```cpp
+#include <QCoreApplication>
+#include <QDebug>
+#include <QDate>
+#include <QTime>
+#include <QDateTime>
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication a(argc, argv);
+
+    QDate today = QDate::currentDate();
+    qInfo() << "Today's Date:" << today.toString(Qt::ISODate);
+
+    QTime now = QTime::currentTime();
+    qInfo() << "Current Time:" << now.toString(Qt::ISODate);
+
+    QDateTime current = QDateTime::currentDateTime();
+    qInfo() << "Current DateTime:" << current.toString(Qt::ISODate);
+
+    return a.exec();
+}
+```
+
+---
+
+### 6.3 QString
+QString is used for string manipulation.
+
+**Example: String Manipulation**
+```cpp
+#include <QCoreApplication>
+#include <QDebug>
+#include <QString>
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication a(argc, argv);
+
+    QString name = "Qt Framework";
+    qInfo() << "Uppercase:" << name.toUpper();
+    qInfo() << "Lowercase:" << name.toLower();
+    qInfo() << "Split:" << name.split(" ");
+
+    return a.exec();
+}
+```
+
+---
+
+### 6.4 QVariant
+QVariant is a container for any datatype.
+
+**Example: Using QVariant**
+```cpp
+#include <QCoreApplication>
+#include <QDebug>
+#include <QVariant>
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication a(argc, argv);
+
+    QVariant value = 42;
+    QVariant text = "Hello, QVariant";
+
+    qInfo() << "Integer:" << value.toInt();
+    qInfo() << "String:" << text.toString();
+
+    return a.exec();
+}
+```
+
+---
+
+## Conclusion
+This guide covers **Qt Core fundamentals**, including:
+- QObject, signals & slots
+- Timers and event loops
+- Essential Qt data types
+- Containers like QList, QStringList, and QMap
+
+Once you're comfortable with these, you can move on to **Qt Widgets** for GUI development.
+____________________________
  QT ->libraries witten in C++
 major parts:
 -core: non visual classes
