@@ -1,0 +1,432 @@
+Qt Core - Signals and Slots Study Notes
+
+1️⃣ What are Signals and Slots?
+Definition
+Signals and Slots is a mechanism in Qt for event-driven programming.
+Signal → Emits an event when something happens.
+Slot → A function that responds to a signal.
+
+Why do we use Signals and Slots?
+Decouples components (objects don’t need to know each other).
+->Flexible communication between objects.
+Used in real-time applications like GUI updates, timers, inter-thread communication, etc.
+
+
+#include <QObject>
+#include <QDebug>
+
+class MyClass : public QObject
+{
+    Q_OBJECT
+
+public:
+    explicit MyClass(QObject *parent = nullptr) {}
+
+signals:
+    void mySignal();  // A signal (no implementation needed)
+
+public slots:
+    void mySlot() { qDebug() << "Slot executed"; }
+};
+
+
+
+int main()
+{
+    MyClass obj1,obj2;
+    QObject::connect(&obj1, &MyClass::mySignal, &obj2, &MyClass::mySlot);
+    emit obj1.mySignal();  // Emitting the signal
+}
+
+
+mySignal() → A signal is emitted.
+mySlot() → Executes when the signal is received.
+connect() → Links signal to slot.
+
+
+
+Connecting and Disconnecting Signals and Slots
+
+
+
+QObject::connect(senderObject, &SenderClass::signalName, receiverObject, &ReceiverClass::slotName);
+
+QObject::disconnect(senderObject, &SenderClass::signalName, receiverObject, &ReceiverClass::slotName);
+              Removes the connection between the signal and slot.
+             If no arguments, it removes all connections for senderObject.
+
+
+
+
+4️⃣ Qt Property Example (Q_PROPERTY)- MACRO
+Q_PROPERTY allows automated notifications when a value changes.
+Q_PROPERTY(int value READ getValue WRITE setValue NOTIFY valueChanged)
+
+
+#include <QObject>
+#include <QDebug>
+
+class MyObject : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int value READ getValue WRITE setValue NOTIFY valueChanged)
+
+private:
+    int m_value;
+
+public:
+    MyObject(QObject *parent = nullptr) : QObject(parent), m_value(0) {}
+
+    int getValue() const { return m_value; }
+
+    void setValue(int val)
+    {
+        if (m_value != val)
+        {
+            m_value = val;
+            emit valueChanged(m_value);
+        }
+    }
+
+signals:
+    void valueChanged(int newValue);
+};
+
+int main()
+{
+    MyObject obj;
+    QObject::connect(&obj, &MyObject::valueChanged, [](int newValue) {
+        qDebug() << "Value changed to:" << newValue;
+    });
+
+    obj.setValue(42);  // Emits valueChanged signal
+}
+
+Q_PROPERTY(int value ...) → Allows value tracking.
+setValue(42) → Changes value only if different, then emits valueChanged(int) signal.
+
+
+5️⃣ QTimer Example
+QTimer is a class in Qt that allows you to schedule a function or signal to be triggered after a certain time interval.
+->periodic actions
+
+
+#include <QCoreApplication>
+#include <QTimer>
+#include <QDebug>
+
+class SimpleTimer : public QObject {
+    Q_OBJECT
+
+public:
+    SimpleTimer(QObject *parent = nullptr) : QObject(parent) {
+        // Create a timer
+        QTimer *timer = new QTimer(this);
+
+        // Connect the timeout signal to a custom slot
+        connect(timer, &QTimer::timeout, this, &SimpleTimer::onTimeout);
+
+        // Start the timer with an interval of 1000 milliseconds (1 second)
+        timer->start(1000);
+    }
+
+public slots:
+    void onTimeout() {
+        static int count = 0;
+        qDebug() << "Timer triggered! Count:" << ++count;
+
+        // Stop the timer after 5 triggers (5 seconds)
+        if (count >= 5) {
+            qDebug() << "Stopping the timer!";
+            qApp->quit();  // Exits the application
+        }
+    }
+};
+
+int main(int argc, char *argv[]) {
+    QCoreApplication app(argc, argv);
+
+    // Create an instance of SimpleTimer
+    SimpleTimer timerExample;
+
+    // Enter the application event loop
+    return app.exec();
+}
+
+#include "main.moc"
+
+
+QTimer generates a timeout() signal at regular intervals.
+Connected to timeoutHandler(), which executes every 2 seconds.
+
+
+6️⃣ Dog Example - Signal and Slot
+
+
+#include <QObject>
+#include <QDebug>
+
+class Dog : public QObject
+{
+    Q_OBJECT
+
+public:
+    explicit Dog(QObject *parent = nullptr) {}
+
+signals:
+    void bark(QString sound);
+
+public slots:
+    void listen(QString sound)
+    {
+        qDebug() << "Dog hears:" << sound;
+    }
+};
+
+int main()
+{
+    Dog dog1, dog2;
+    
+    QObject::connect(&dog1, &Dog::bark, &dog2, &Dog::listen);
+    
+    emit dog1.bark("Woof Woof!");  // dog2 listens
+}
+
+
+Types of connect() Syntax
+
+1-QObject::connect(sender, &SenderClass::signalName, receiver, &ReceiverClass::slotName);
+2-QObject::connect(&obj, &MyClass::mySignal, [](QString message) {
+    qDebug() << "Lambda received message:" << message;
+});
+3-Connecting to this
+QObject::connect(this, &MyClass::mySignal, this, &MyClass::mySlot);
+4-Connecting to nullptr (Auto-disconnect)
+QObject::connect(sender, &SenderClass::signalName, nullptr, nullptr);
+
+
+
+QT basic Classes
+
+1️⃣ QObject - The Base Class
+What is it?
+QObject is the base class for most Qt classes.
+Enables signals and slots, event handling, and object hierarchy.
+
+#include <QObject>
+#include <QDebug>
+
+class MyClass : public QObject {
+    Q_OBJECT
+
+public:
+    explicit MyClass(QObject *parent = nullptr) : QObject(parent) {}
+
+    void showMessage() {
+        qDebug() << "Hello from QObject-based class!";
+    }
+};
+
+int main() {
+    MyClass obj;
+//obj.setObjectName("Vinayak");
+    obj.showMessage();
+}
+
+
+o/p
+Hello from QObject-based class!
+
+2️⃣ Qt Integer Types
+What are they?
+Qt provides platform-independent integer types:
+qint8, qint16, qint32, qint64 (signed)
+quint8, quint16, quint32, quint64 (unsigned)
+
+qint8 - (-128-127)
+quint8 -( 0-127)
+
+#include <QDebug>
+#include <QtGlobal>
+
+int main() {
+    qint16 a = -100;
+    quint32 b = 4294967295;
+
+    qDebug() << "Signed 16-bit:" << a;
+    qDebug() << "Unsigned 32-bit:" << b;
+}
+
+
+o/p -Signed 16-bit: -100
+Unsigned 32-bit: 4294967295
+
+
+3. QDate – Handling Dates
+
+QDate stores a calendar date.
+
+Provides methods for:
+Getting today’s date (QDate::currentDate()).
+Formatting (toString()).
+Adding/subtracting days (addDays()).
+
+
+#include <QDate>
+#include <QDebug>
+
+int main() {
+    QDate today = QDate::currentDate();
+    QDate customDate(2025, 2, 16);
+
+    qDebug() << "Today's date:" << today.toString();
+    qDebug() << "Custom date:" << customDate.toString("yyyy-MM-dd");
+}
+
+
+also we can
+
+
+addDays(1),addYears(20)
+Output
+
+Today's date: Sun Feb 16 2025
+Custom date: 2025-02-16
+
+
+📌 4. QTime – Handling Time
+📝 Theory
+Stores hours, minutes, seconds, and milliseconds.
+Useful for time calculations.
+
+#include <QTime>
+#include <QDebug>
+
+int main() {
+    QTime now = QTime::currentTime();
+    QTime customTime(14, 30, 0);
+
+    qDebug() << "Current time:" << now.toString();
+    qDebug() << "Custom time:" << customTime.toString("hh:mm:ss");
+    qDebug() << "Custom time:" << customTime.toString(Qt::DateFormat::TextDate);
+  qDebug() << "Custom time:" << customTime.toString(Qt::DateFormat::ISODate);
+  qDebug() << "Custom time:" << customTime.toString(Qt::DateFormat::RFC822Date);
+
+
+
+5. QDateTime – Date & Time Together
+📝 Theory
+Combines QDate + QTime.
+#include <QDateTime>
+#include <QDebug>
+
+int main() {
+    QDateTime now = QDateTime::currentDateTime();
+    QDateTime customDateTime(QDate(2025, 2, 16), QTime(14, 30, 0));
+
+    qDebug() << "Current date & time:" << now.toString();
+    qDebug() << "Custom date & time:" << customDateTime.toString("yyyy-MM-dd hh:mm:ss");
+}
+
+
+o/p
+Current date & time: Sun Feb 16 2025 14:45:23
+Custom date & time: 2025-02-16 14:30:00
+
+
+ QString – Handling Text
+📝 Theory
+Used for Unicode string handling.
+Supports concatenation, search, replace, and formatting.
+
+
+#include <QString>
+#include <QDebug>
+
+int main() {
+    QString name = "Sreya";
+    QString greeting = QString("Hello, %1!").arg(name);
+
+    qDebug() << greeting;
+    qDebug() << "Length of string:" << greeting.length();
+}
+
+o/p
+Hello, Sreya!
+Length of string: 13
+
+
+
+Function	                   Description
+QString::length()	         Get string length
+QString::isEmpty()	         Check if empty
+QString::toUpper() / toLower()	 Convert case
+QString::mid() / left() / right()	Extract substring
+QString::contains() / indexOf() 	Search in string
+QString::replace()	                 Replace text
+QString::split()	               Split into a list
+QString::number()	                Convert number to string
+QString::toInt(), toDouble()	        Convert string to number
+QString::toUtf8() / QString::fromUtf8()	  Convert between QString and QByteArray
+
+
+
+ QByteArray – Handling Binary Data
+📝 Theory
+Stores raw binary data.
+Supports Base64 encoding.
+
+#include <QByteArray>
+#include <QDebug>
+
+int main() {
+    QByteArray data("Hello Qt!");
+    QByteArray base64 = data.toBase64(); ///toHex
+
+    qDebug() << "Original:" << data;
+    qDebug() << "Base64 Encoded:" << base64;
+}
+
+Output
+
+Original: "Hello Qt!"
+Base64 Encoded: "SGVsbG8gUXQh"
+
+
+
+
+
+    
+}
+
+o/p
+Current time: 14:45:23
+Custom time: 14:30:00
+
+
+
+QVariant – Storing Any Data Type
+📝 Theory
+QVariant can store different data types dynamically.
+
+#include <QVariant>
+#include <QDebug>
+
+int main() {
+    QVariant value = 42;
+    qDebug() << "Integer value:" << value.toInt();
+
+    value = "Hello Qt";
+    qDebug() << "String value:" << value.toString();
+}
+
+
+Integer value: 42
+String value: "Hello Qt"
+
+
+
+
+
+       
+
