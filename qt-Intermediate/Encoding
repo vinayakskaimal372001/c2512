@@ -1,0 +1,246 @@
+Encoding
+
+ASCII -> Anerican Standard Code for Imformation interchange- ||7 bit|| character sett containing 128 characters,
+-0-9
+-a-z 97-
+-A-Z 65-
+You already use it
+  http://www.asciitable.com/
+
+This is the program -:
+
+
+/*
+
+  What
+  ASCII
+
+  Why
+  No encoding
+
+  How
+  You already use it
+  http://www.asciitable.com/
+
+ ASCII is a 7-bit character set containing 128 characters.
+ It contains the numbers from 0-9, the upper and lower case English letters from A to Z, and some special characters.
+ The character sets used in modern computers, in HTML, and on the Internet, are all based on ASCII.
+
+ */
+
+||UTF-8||
+
+#include <QCoreApplication>
+#include <QDebug>
+#include <QFile>
+#include <QDir>
+
+QByteArray makedata()
+{
+    QByteArray data;
+    for(int i = 0; i < 10; i++) {
+        data.append(72);
+        data.append(101);
+        data.append(108);
+        data.append(108);
+        data.append(111);
+        data.append(33);
+        data.append(13); // \r
+        data.append(10); // \n
+
+        // \r\n
+    }
+    return data;
+}
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication a(argc, argv);
+
+    QByteArray data = makedata();
+    qInfo() << data;//OUTPUT WILL BE /R /N INSTEAD 
+
+    QFile file("data.txt");
+    if(file.open(QIODevice::WriteOnly))
+    {
+        file.write(data);
+        file.close();
+    }
+
+    qInfo() << "Done";
+
+    return a.exec();
+}
+ 
+----------------------------------------------------------------------------------
+
+UNICODE- used to support variety of languages other than English
+
+Unicode encording -> UTF-8(1-4BYTES),UTF-16(2BYTES PER CHARACTER),UTF-32  ---->bits
+
+
+
+
+QString uses UTF-16 by default
+utf-16
+/*
+
+  What
+  UTF16
+
+  Why
+  We want one or two 16-bit code units
+
+  How
+  UTF-16 is a character encoding capable of encoding all 1,112,064 non-surrogate code points of Unicode.
+  The encoding is variable-length, as code points are encoded with one or two 16-bit code units
+
+ */
+
+#include <QCoreApplication>
+#include <QDebug>
+#include <QFile>
+#include <QDir>
+#include <QTextStream>
+#include <QRandomGenerator>
+
+
+QString makeData() {
+    QString data;
+
+    data.append("Unicode test\r\n");
+    for(int i = 0; i < 10; i++) {
+        int number = QRandomGenerator::global()->bounded(1024);
+
+        data.append(QChar(number));
+    }
+    data.append("\r\n");
+
+    return data;
+}
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication a(argc, argv);
+
+    QString data = makeData();
+
+    QFile file("data.txt");
+    if(file.open(QIODevice::WriteOnly)) {
+
+        QTextStream stream(&file);
+   
+         stream.setEncoding(QStringConverter::Utf16);
+        stream << data;
+        stream.flush();
+
+        file.close();
+    }
+
+    qInfo() << "Done";
+    qInfo() << "UTF16: " << data;
+    qInfo() << "UTF8: " << data.toUtf8();
+    qInfo() << "ASCII: " << data.toLatin1();
+
+
+    return a.exec();
+}
+
+
+
+Base 64
+
+/*
+
+  What
+  Base 64
+
+  Why
+  We want to transmit special characters
+  Some protocols use special characters that can cause issues
+
+  How
+  Base64 is a group of similar binary-to-text encoding schemes that represent binary data in an ASCII string format by translating it into a radix-64 representation.
+  The term Base64 originates from a specific MIME content transfer encoding.
+  Each Base64 digit represents exactly 6 bits of data. Three 8-bit bytes (i.e., a total of 24 bits) can therefore be represented by four 6-bit Base64 digits.
+
+*/
+
+#include <QCoreApplication>
+
+QString makeData() {
+    QString data;
+    for(int i = 0; i < 10; i++) {
+        data.append("Hello\r\n");
+    }
+    return  data;
+}
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication a(argc, argv);
+
+    QString data = makeData();
+    QByteArray bytes(data.toUtf8());
+    QByteArray encoded = bytes.toBase64();
+    QByteArray decoded = QByteArray::fromBase64(encoded);
+
+    qInfo() << "Encoded:" << encoded;
+    qInfo(" --------------------------------------- ");
+    qInfo() << "Decoded:" << decoded;
+
+
+    return a.exec();
+}
+
+
+
+->toHex
+
+/*
+
+  What
+  Base 64
+
+  Why
+  We want to transmit special characters
+  Some protocols use special characters that can cause issues
+
+  How
+  Base64 is a group of similar binary-to-text encoding schemes that represent binary data in an ASCII string format by translating it into a radix-64 representation.
+  The term Base64 originates from a specific MIME content transfer encoding.
+  Each Base64 digit represents exactly 6 bits of data. Three 8-bit bytes (i.e., a total of 24 bits) can therefore be represented by four 6-bit Base64 digits.
+
+*/
+
+#include <QCoreApplication>
+#include <QDebug>
+
+QString makeData() {
+    QString data;
+    for(int i = 0; i < 10; i++) {
+        data.append("Hello\r\n");
+    }
+    return  data;
+}
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication a(argc, argv);
+
+    QString data = makeData();
+    QByteArray bytes(data.toUtf8());
+    QByteArray encoded = bytes.toHex();
+    QByteArray decoded = QByteArray::fromHex(encoded);
+
+    qInfo() << "Encoded:" << encoded;
+    qInfo(" --------------------------------------- ");
+    qInfo() << "Decoded:" << decoded;
+
+
+    return a.exec();
+}
+
+
+
+
