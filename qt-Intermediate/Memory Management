@@ -359,6 +359,167 @@ View
 
 
 
+/*
+
+  What
+  Sharing a pointer among multiple objects
+
+
+  Why
+  We want a smart pointer, but we want to share it
+
+  How
+  Cats and a toy
+  Note we may not use smart pointers often in this course
+ */
+cat------------------
+
+#ifndef CAT_H
+#define CAT_H
+
+#include <QObject>
+#include <QDebug>
+#include <QSharedPointer>
+#include "toy.h"
+
+class Cat : public QObject
+{
+    Q_OBJECT
+public:
+    explicit Cat(QObject *parent = nullptr, QString name = "");
+    ~Cat();
+
+    void play(QSharedPointer<Toy> toy);
+
+signals:
+
+private:
+    QSharedPointer<Toy> m_toy;
+};
+
+#endif // CAT_H
+
+cat.cpp--------------------------------
+
+#include "cat.h"
+
+Cat::Cat(QObject *parent, QString name) : QObject(parent)
+{
+    setObjectName(name);
+    qInfo() << "Constructed" << this;
+}
+
+Cat::~Cat()
+{
+    qInfo() << "Deconstructed" << this;
+}
+
+void Cat::play(QSharedPointer<Toy> toy)
+{
+    m_toy.swap(toy);
+    qInfo() << this << "Playing with" << m_toy.data();
+}
+
+test.h---------------------------------------
+#ifndef TEST_H
+#define TEST_H
+
+#include <QObject>
+#include <QDebug>
+
+class Test : public QObject
+{
+    Q_OBJECT
+public:
+    explicit Test(QObject *parent = nullptr, QString name = "");
+    ~Test();
+signals:
+
+};
+
+#endif // TEST_H
+
+test.cpp--------------------------------------------
+#include "test.h"
+
+Test::Test(QObject *parent,QString name) : QObject(parent)
+{
+    setObjectName(name);
+    qInfo() << "Constructed" << this;
+}
+
+Test::~Test()
+{
+    qInfo() << "Deconstructed" << this;
+}
+
+toy.h-----------------------------------------------
+
+#ifndef TOY_H
+#define TOY_H
+
+#include <QObject>
+#include <QDebug>
+
+class Toy : public QObject
+{
+    Q_OBJECT
+public:
+    explicit Toy(QObject *parent = nullptr, QString name = "");
+    ~Toy();
+signals:
+
+};
+
+#endif // TOY_H
+
+toy.cpp-----------------------------------------------------
+
+#include "toy.h"
+
+Toy::Toy(QObject *parent, QString name) : QObject(parent)
+{
+    setObjectName(name);
+    qInfo() << "Constructed" << this;
+}
+
+Toy::~Toy()
+{
+    qInfo() << "Deconstructed" << this;
+}
+
+
+msin.cpp-------------------------------------
+
+#include <QCoreApplication>
+#include <QSharedPointer>
+#include "cat.h"
+#include "toy.h"
+#include <vector>
+
+void test()
+{
+    int max = 5;
+    QSharedPointer<Toy> toy(new Toy());
+    std::vector<QSharedPointer<Cat>> cats(max);
+
+    for(int i = 0; i < max; i++)
+    {
+        cats[i].reset(new Cat());
+        cats[i]->play(toy);
+    }
+
+    qInfo() << "All cats are done!";
+}
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication a(argc, argv);
+    test();
+    return a.exec();
+}
+
+
 ‐----------------‐
 
 
@@ -512,7 +673,7 @@ public:
 
 void test() {
     QScopedPointer<Test> sp(new Test());
-    qInfo() << "Scoped Pointer:" << sp.data();
+    qInfo() << "Scoped Pointer:" << sp.data(); //raw pointer to    the obj managed by smart pointer  -> Test(0x4567890)
 }
 
 int main(int argc, char *argv[]) {
@@ -532,7 +693,8 @@ Destructed
 
 ### `QSharedPointer`
 - Reference counting, deletes the object when no references remain.
-
+->QSHAREDpOINTER IS A SMART POINTER THAT AUTO DELETE MEMORY,KEEPS TRACK OF HOW MANY SHARED POINTERS ARE POINTING TO THE SAME OBJECT and
+only delete when last pointer goes out of scope!!
 #### Example: `QSharedPointer`
 ```cpp
 #include <QCoreApplication>
@@ -558,7 +720,7 @@ int main(int argc, char *argv[]) {
 
     QSharedPointer<Test> ptr = getObject();
     doWork(ptr);
-
+            ///ptr npw own the object and will delete i WHEN NO MORE SHARED POINTER REFERENCE IT!!!
     return a.exec();
 }
 ```
