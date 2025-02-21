@@ -520,6 +520,182 @@ int main(int argc, char *argv[])
 }
 
 
+
+Program Flow of the Given Code (Step-by-Step Execution)
+
+This program demonstrates shared ownership of a toy among multiple cats using QSharedPointer. Let's go through the execution flow in five stages:
+
+
+---
+
+1. Program Initialization (main.cpp)
+
+1. QCoreApplication starts (main() function).
+
+
+2. The test() function is called.
+
+
+
+
+---
+
+2. Creating a Shared Toy (test())
+
+1. QSharedPointer<Toy> toy(new Toy());
+
+Creates a shared pointer toy that owns a new Toy object.
+
+Output:
+
+Constructed Toy(0x1fadd8)
+
+
+
+2. std::vector<QSharedPointer<Cat>> cats(max);
+
+Creates a vector to store max = 5 shared pointers to Cat objects.
+
+
+
+
+
+---
+
+3. Creating and Assigning Cats (for loop in test())
+
+The loop runs 5 times, creating 5 Cat objects.
+
+First Iteration (i = 0):
+
+1. cats[i].reset(new Cat());
+
+Creates a new Cat and assigns it to cats[0].
+
+Output:
+
+Constructed Cat(0x2a9bc0)
+
+
+
+2. cats[i]->play(toy);
+
+Calls the play() function of Cat with the shared toy.
+
+Inside play(), m_toy.swap(toy); swaps the cat’s toy with the given toy.
+
+Output:
+
+Cat(0x2a9bc0) Playing with Toy(0x1fadd8)
+
+
+
+
+Second Iteration (i = 1):
+
+1. cats[1] gets a new Cat instance.
+
+Output:
+
+Constructed Cat(0x2a9be0)
+
+
+
+2. cats[1]->play(toy);
+
+Output:
+
+Cat(0x2a9be0) Playing with Toy(0x1fadd8)
+
+
+
+
+Remaining Iterations (i = 2, 3, 4)
+
+Each cat is created and starts playing with the same shared toy:
+
+Constructed Cat(0x2a9c00)
+Cat(0x2a9c00) Playing with Toy(0x1fadd8)
+
+Constructed Cat(0x2a9c20)
+Cat(0x2a9c20) Playing with Toy(0x1fadd8)
+
+Constructed Cat(0x2a9c40)
+Cat(0x2a9c40) Playing with Toy(0x1fadd8)
+
+
+---
+
+4. All Cats Finish Playing
+
+1. After the loop, the message "All cats are done!" is printed.
+
+All cats are done!
+
+
+2. test() function ends.
+
+
+
+
+---
+
+5. Cleanup (Automatic Deletion)
+
+Since QSharedPointer is reference-counted, once test() exits:
+
+1. All QSharedPointer<Cat> instances go out of scope.
+
+
+2. Each Cat object is deleted one by one.
+
+Deconstructed Cat(0x2a9bc0)
+Deconstructed Cat(0x2a9be0)
+Deconstructed Cat(0x2a9c00)
+Deconstructed Cat(0x2a9c20)
+Deconstructed Cat(0x2a9c40)
+
+
+3. Last reference to toy is lost, so it is deleted.
+
+Deconstructed Toy(0x1fadd8)
+
+
+4. main() ends, and the program exits.
+
+
+
+
+---
+
+Summary of Execution
+
+1. A single Toy is created and shared.
+
+
+2. 5 Cats are created and play with the shared toy.
+
+
+3. The program prints "All cats are done!".
+
+
+4. When the function ends, all Cats are deleted, followed by the Toy.
+
+
+
+
+---
+
+Key Learning
+
+QSharedPointer manages memory automatically (deletes when no references remain).
+
+Multiple objects (Cats) can share ownership of a single resource (Toy).
+
+No manual memory management is needed, reducing memory leaks.
+
+
+
 ‐----------------‐
 
 
