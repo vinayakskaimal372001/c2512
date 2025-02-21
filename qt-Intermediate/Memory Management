@@ -1,0 +1,364 @@
+Memory Management
+
+Stack vs Heap
+-------------
+
+Stack - Automatic
+-safe space
+-limited space for OS
+-automatically allocate and deallocate memory
+
+
+Heap
+Pointers are variable that typically live on the stack that point to object created on the heap
+
+New -allocate heap
+Delete-deallocate from heap
+
+eg-> Int main()
+   {
+//Allocate
+cat* c= new cat();
+//Deallocate
+delete c;
+   }
+
+
+Memory Leaks
+
+When the memory is not deallocated then from stack the memory will be automatically deallocate but the heap memory will be there still..
+hence when a function calls the heap memory will be allocate and the memory will become full.
+
+Dangling pointer
+
+Int main()
+   {
+//Allocate
+cat* c= new cat();
+//Deallocate
+delete c;
+c->meow(); ////case occur
+   }
+
+Smart Pointers 
+Are variables that automatically delete !!
+syntax->
+
+int main()
+{
+shared_ptr<Cat> kitty =shared_ptr<Cat>(new Cat());
+
+//NO NEED OF EXTERNALLY DELETEING
+
+}
+
+1.unique_ptr -only on ecopy can exist
+2.shared_ptr-reference counting, many copies
+3.weak_ptr-weak reference 
+4.auto_ptr-replaced by unique_ptr
+
+ THERE IS QT SMART POINTERS ->>> QScopedPointer
+
+
+#ifndef TEST_H
+#define TEST_H
+
+#include <QObject>
+#include <QDebug>
+
+class Test : public QObject
+{
+    Q_OBJECT
+public:
+    explicit Test(QObject *parent = nullptr, QString name = "");
+    ~Test();
+signals:
+
+};
+
+#endif // TEST_H
+
+#include "test.h"
+
+Test::Test(QObject *parent,QString name) : QObject(parent)
+{
+    setObjectName(name);
+    qInfo() << "Constructed" << this;
+}
+
+Test::~Test()
+{
+    qInfo() << "Deconstructed" << this;
+}
+
+
+
+#include <QCoreApplication>
+#include <QScopedPointer>
+#include "test.h"
+
+void test()
+{
+    QScopedPointer<Test> sp(new Test());
+    sp->setObjectName("My Test");
+
+    qInfo() << "Scoped Pointer :" << &sp;
+    qInfo() << "Pointer Data :" << sp.data();
+    qInfo() << sp->objectName();
+
+}
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication a(argc, argv);
+
+    test();
+
+    return a.exec();
+}
+
+o/p
+Constructed Test(0x1307290)
+Scoped Pointer : 0x6ffe30
+Pointer Data : Test(0x1307290, name = "My Test")
+"My Test"
+Deconstructed Test(0x1307290, name = "My Test")
+
+
+->QSharedPointer
+
+/*
+
+  What
+  QSharedPointer
+
+  Why
+  Manual memory management is error prone
+
+  How
+  See below
+*/
+
+#include <QCoreApplication>
+#include <QSharedPointer>
+#include "test.h"
+
+QSharedPointer<Test> getObject(QString name)
+{
+    QSharedPointer<Test> sp(new Test());
+    sp->setObjectName(name);
+    //Do other things here
+    return sp;
+}
+
+void doWork(QSharedPointer<Test> sp)
+{
+    //We are using a copy of the sharedpointer
+    qInfo() << "Work" << sp.data();
+    qInfo() << "SharedPointer" << &sp;
+}
+
+void test()
+{
+    qInfo() << "Getting the object";
+    QSharedPointer<Test> ptr = getObject("My Object");
+    qInfo() << "SharedPointer" << &ptr;
+    qInfo() << "Object" << ptr.data();
+
+    doWork(ptr);
+
+
+    //Reference count is zero
+    qInfo() << "Complete";
+}
+
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication a(argc, argv);
+    test();
+    return a.exec();
+}
+
+
+
+output------------
+
+Getting the object
+Constructed Test(0x1fadd8)
+SharedPointer 0x6ffe14
+Object Test(0x1fadd8, name = "My Object")
+Work Test(0x1fadd8, name = "My Object")
+SharedPointer 0x6ffe70
+Complete
+Deconstructed Test(0x1fadd8, name = "My Object")
+
+-------------------------------------------------------
+
+
+-------------------------------------------------------------------------------------
+
+Parent child relation-
+
+#ifndef TEST_H
+#define TEST_H
+
+#include <QObject>
+#include <QDebug>
+
+
+class Test : public QObject
+{
+    Q_OBJECT
+public:
+    explicit Test(QObject *parent = nullptr, QString name = "");
+    ~Test();
+signals:
+
+};
+
+#endif // TEST_H
+
+
+#include "test.h"
+
+Test::Test(QObject *parent, QString name) : QObject(parent)
+{
+    setObjectName(name);
+    qInfo()<<"Constructed"<<this;
+    
+}
+
+Test::~Test()
+{
+    qInfo()<<"Dec onstructed"<<this;
+     
+}
+
+
+
+/*
+    What
+    Parent child relationships
+
+    Why
+    QObject built in memory managment
+
+    How
+    Making an object tree
+
+*/
+
+
+#include <QCoreApplication>
+#include "test.h"
+
+Test* makeTree()
+{
+    Test* root = new Test(nullptr,"Root");
+
+    for(int p = 0; p < 5; p++)
+    {
+        Test* pobj = new Test(root,"Parent-" + QString::number(p));
+
+        for(int c = 0; c < 3; c++)
+        {
+            Test* cobj = new Test(pobj,"Child-"  + QString::number(p) + " " + QString::number(c));
+            for(int s = 0; s < 3; s++)
+            {
+                Test* sobj = new Test(cobj,"Sub-"  + QString::number(p) + " " + QString::number(c)  + " " + QString::number(s));
+                Q_UNUSED(sobj);
+            }
+        }
+    }
+
+    return root;
+}
+
+void printTree(Test* root, int level = 0)
+{
+    if(root->children().length() == 0) return; //check number of children in root
+
+    QString lead = "-";
+    lead.fill('-', level * 5);
+
+    foreach(QObject* obj, root->children()) 
+    {
+        Test* child = qobject_cast<Test*>(obj);  //convert QObject* to Test*
+        if(!child) return;
+
+        qInfo() << lead << child;
+
+        printTree(child,level + 1);
+    }
+}
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication a(argc, argv);
+
+    Test* tree = makeTree();
+    printTree(tree,1);
+    delete tree;
+
+    return a.exec();
+}
+
+
+
+<<<<<------------------------| Parent&child new way |----------------->>>>>
+
+
+#include <QCoreApplication>
+#include <QDebug>
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication a(argc, argv);
+
+    QObject parent;
+    parent.setObjectName("Father");
+
+    QObject child;
+    child.setObjectName("Child");
+
+    child.setParent(&parent);
+
+    QObject child2;
+    child2.setObjectName("Child2");
+
+    child2.setParent(&parent);
+
+
+    //Get the parent
+    qInfo() << child.parent();
+
+    //get the children
+    qInfo() << parent.children();  //Qlist
+
+    foreach(QObject* obj, parent.children())
+    {
+        qInfo() << obj;
+    }
+
+    return a.exec();
+}
+
+
+output
+
+QObject(0x66fe4c, name = "Father")
+(QObject(0x66fe44, name = "Child"), QObject(0x66fe3c, name = "Child2"))
+QObject(0x66fe44, name = "Child")
+QObject(0x66fe3c, name = "Child2")
+
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+
+View
+
+
+
+
+
+
