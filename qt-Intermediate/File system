@@ -220,3 +220,161 @@ int main() {
 - File metadata (QFileInfo).
 - Disk storage details (QStorageInfo).
 - Preventing access collisions (QLockFile).
+
+
+
+
+
+
+
+all in one prg
+
+
+#include <QCoreApplication>
+#include <QFile>
+#include <QTextStream>
+#include <QDataStream>
+#include <QDebug>
+#include <QDir>
+#include <QFileInfo>
+#include <QLockFile>
+
+void writeToFile(const QString &filePath) {
+    QFile file(filePath);
+    if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QTextStream out(&file);
+        out << "Hello, this is a test file.\n";
+        out << "This file demonstrates Qt File Handling.\n";
+        file.close();
+        qDebug() << "File written successfully!";
+    } else {
+        qDebug() << "Error: Unable to write file.";
+    }
+}
+
+void appendToFile(const QString &filePath) {
+    QFile file(filePath);
+    if (file.open(QIODevice::Append | QIODevice::Text)) {
+        QTextStream out(&file);
+        out << "Appending more text...\n";
+        file.close();
+        qDebug() << "Data appended successfully!";
+    } else {
+        qDebug() << "Error: Unable to append to file.";
+    }
+}
+
+void readFromFile(const QString &filePath) {
+    QFile file(filePath);
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QTextStream in(&file);
+        qDebug() << "Reading file content:";
+        while (!in.atEnd()) {
+            qDebug() << in.readLine();
+        }
+        file.close();
+    } else {
+        qDebug() << "Error: Unable to read file.";
+    }
+}
+
+void readLargeFile(const QString &filePath) {
+    QFile file(filePath);
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QTextStream in(&file);
+        while (!in.atEnd()) {
+            QString line = in.readLine();
+            qDebug() << line;  // Process line-by-line to save memory
+        }
+        file.close();
+    } else {
+        qDebug() << "Error: Unable to read large file.";
+    }
+}
+
+void getFileInfo(const QString &filePath) {
+    QFileInfo fileInfo(filePath);
+    if (fileInfo.exists()) {
+        qDebug() << "File Name:" << fileInfo.fileName();
+        qDebug() << "File Size:" << fileInfo.size() << "bytes";
+        qDebug() << "Last Modified:" << fileInfo.lastModified().toString();
+        qDebug() << "Absolute Path:" << fileInfo.absoluteFilePath();
+    } else {
+        qDebug() << "File does not exist.";
+    }
+}
+
+void navigateDirectories(const QString &path) {
+    QDir dir(path);
+    if (!dir.exists()) {
+        qDebug() << "Directory does not exist.";
+        return;
+    }
+    
+    qDebug() << "Listing files in directory:" << dir.absolutePath();
+    QStringList files = dir.entryList(QDir::Files | QDir::NoDotAndDotDot);
+    for (const QString &file : files) {
+        qDebug() << file;
+    }
+}
+
+void recursiveDirectorySearch(const QString &path) {
+    QDir dir(path);
+    if (!dir.exists()) {
+        qDebug() << "Directory does not exist.";
+        return;
+    }
+
+    qDebug() << "Recursively listing files in:" << path;
+    QStringList allFiles = dir.entryList(QDir::Files | QDir::NoDotAndDotDot, QDir::Name);
+    for (const QString &file : allFiles) {
+        qDebug() << "File:" << dir.absoluteFilePath(file);
+    }
+
+    QStringList subDirs = dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+    for (const QString &subDir : subDirs) {
+        recursiveDirectorySearch(dir.absoluteFilePath(subDir));
+    }
+}
+
+void lockFileExample(const QString &filePath) {
+    QLockFile lock(filePath + ".lock");
+
+    if (!lock.tryLock()) {
+        qDebug() << "File is locked by another process.";
+        return;
+    }
+
+    QFile file(filePath);
+    if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QTextStream out(&file);
+        out << "This file is locked while writing.\n";
+        file.close();
+        qDebug() << "File written with lock.";
+    } else {
+        qDebug() << "Error: Unable to write locked file.";
+    }
+}
+
+int main(int argc, char *argv[]) {
+    QCoreApplication app(argc, argv);
+
+    QString filePath = "test.txt";
+    QString dirPath = "."; // Current directory
+
+    // File Operations
+    writeToFile(filePath);
+    appendToFile(filePath);
+    readFromFile(filePath);
+    readLargeFile(filePath);
+    getFileInfo(filePath);
+
+    // Directory Operations
+    navigateDirectories(dirPath);
+    recursiveDirectorySearch(dirPath);
+
+    // File Locking
+    lockFileExample(filePath);
+
+    return app.exec();
+}
