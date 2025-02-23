@@ -187,3 +187,143 @@ int main() {
 
     return 0;
 }
+
+
+
+
+QSETTINGS NOTES
+
+==============================
+1ï¸âƒ£ NAVIGATING GROUPS IN QSETTINGS
+==============================
+- Groups in QSettings help organize settings logically.
+- Methods:
+  - `beginGroup("GroupName")` â†’ Enter a group.
+  - `endGroup()` â†’ Exit a group.
+  - `allKeys()` â†’ List all keys inside the current group.
+
+ðŸ”¹ CODE EXAMPLE:
+----------------------
+#include <QCoreApplication>
+#include <QSettings>
+#include <QDebug>
+
+int main() {
+    QCoreApplication app(argc, nullptr);
+    QSettings settings("MyCompany", "MyApp");
+
+    settings.beginGroup("User");
+    settings.setValue("username", "Sreya");
+    settings.setValue("email", "sreya@example.com");
+    settings.endGroup();
+
+    settings.beginGroup("Appearance");
+    settings.setValue("theme", "Dark");
+    settings.setValue("font", "Arial");
+    settings.endGroup();
+
+    settings.beginGroup("User");
+    qDebug() << "Username:" << settings.value("username").toString();
+    qDebug() << "Email:" << settings.value("email").toString();
+    settings.endGroup();
+
+    settings.beginGroup("Appearance");
+    qDebug() << "Theme:" << settings.value("theme").toString();
+    qDebug() << "Font:" << settings.value("font").toString();
+    settings.endGroup();
+
+    return 0;
+}
+
+ðŸ”¹ OUTPUT:
+----------------------
+Username: "Sreya"
+Email: "sreya@example.com"
+Theme: "Dark"
+Font: "Arial"
+
+==============================
+2ï¸âƒ£ SETTING A CUSTOM FILENAME IN QSETTINGS
+==============================
+- By default, QSettings stores data in the system registry or config files.
+- We can store settings in an `.ini` file using:
+  - `QSettings settings("config.ini", QSettings::IniFormat);`
+
+ðŸ”¹ CODE EXAMPLE:
+----------------------
+#include <QSettings>
+#include <QDebug>
+
+int main() {
+    QSettings settings("config.ini", QSettings::IniFormat);
+
+    settings.setValue("User/username", "Sreya");
+    settings.setValue("Appearance/theme", "Dark");
+
+    qDebug() << "Username:" << settings.value("User/username").toString();
+    qDebug() << "Theme:" << settings.value("Appearance/theme").toString();
+
+    return 0;
+}
+
+ðŸ”¹ OUTPUT:
+----------------------
+Username: "Sreya"
+Theme: "Dark"
+
+ðŸ”¹ GENERATED config.ini FILE:
+----------------------
+[User]
+username=Sreya
+
+[Appearance]
+theme=Dark
+
+==============================
+3ï¸âƒ£ NAVIGATING GROUPS IN A CUSTOM FILE
+==============================
+- To list all groups and keys in a `.ini` file:
+
+ðŸ”¹ CODE EXAMPLE:
+----------------------
+QSettings settings("config.ini", QSettings::IniFormat);
+qDebug() << "All groups:" << settings.childGroups();
+
+settings.beginGroup("User");
+qDebug() << "Keys in User group:" << settings.allKeys();
+settings.endGroup();
+
+ðŸ”¹ OUTPUT:
+----------------------
+All groups: ("User", "Appearance")
+Keys in User group: ("username")
+
+==============================
+4ï¸âƒ£ DELETING A GROUP OR KEY
+==============================
+- To remove a specific key:
+  - `settings.remove("User/username");`
+- To remove a group and all keys inside:
+  ```cpp
+  settings.beginGroup("User");
+  settings.remove("");
+  settings.endGroup();
+  ```
+
+==============================
+ðŸ”¹ SUMMARY TABLE
+==============================
+
+| Feature                | Code |
+|------------------------|------|
+| Set Organization Name  | `QSettings settings("MyCompany", "MyApp");` |
+| Set Custom Filename    | `QSettings settings("config.ini", QSettings::IniFormat);` |
+| Store a Setting        | `settings.setValue("User/username", "Sreya");` |
+| Retrieve a Setting     | `settings.value("User/username").toString();` |
+| Enter a Group         | `settings.beginGroup("User");` |
+| Exit a Group          | `settings.endGroup();` |
+| List All Groups       | `settings.childGroups();` |
+| List Keys in a Group  | `settings.allKeys();` |
+| Delete a Key         | `settings.remove("User/username");` |
+| Delete a Group       | `settings.beginGroup("User"); settings.remove(""); settings.endGroup();` |
+
