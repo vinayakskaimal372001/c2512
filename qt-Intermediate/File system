@@ -144,7 +144,7 @@ qDebug() << "Free Space:" << storage.bytesAvailable();
 ==============================
 8ï¸âƒ£ QLOCKFILE (PREVENT FILE ACCESS COLLISIONS)
 ==============================
-ðŸ”¹ PREVENT MULTIPLE PROCESSES FROM WRITING TO A FILE:
+ðŸ”¹ PREVENT MULTIPLE PROCESSES FROM WRITING TO A FILE: ->used to prevent multiple instance  of a process fro, accessing the same file simultaneously
 ----------------------
 #include <QLockFile>
 #include <QDebug>
