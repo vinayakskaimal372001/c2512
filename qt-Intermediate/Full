@@ -1,0 +1,200 @@
+#ifndef EXPENSEMANAGER_H
+#define EXPENSEMANAGER_H
+
+#include <QFile>
+#include <QDir>
+#include <QFileInfo>
+#include <QString>
+#include <QDebug>
+#include <QMap>
+#include <QTextStream>
+#include <QSettings>
+#include <QtAlgorithms>
+#include <QVector>
+#include <QDataStream>
+#include <QByteArray>
+#include <QBuffer>
+#include <QCryptographicHash>
+#include <QTimer>
+#include <QScopedPointer>
+#include <QSharedPointer>
+
+#define APP_NAME "ExpenseApp"
+#define COMPANY_NAME "MyCompany"
+
+class ExpenseManager {
+public:
+    ExpenseManager(const QString &filePath);
+    ~ExpenseManager();
+    bool addExpense(const QString &category, double amount);
+    QMap<QString, double> getExpenses();
+    void showExpenseSummary();
+    void saveSettings();
+    void loadSettings();
+    void sortExpenses();
+    void saveCompressedData();
+    void loadCompressedData();
+
+private:
+    QString filePath;
+    QSettings settings;
+    QVector<QPair<QString, double>> expenseList;
+    QScopedPointer<QTimer> saveTimer;
+    void autoSave();
+};
+
+#endif // EXPENSEMANAGER_H
+
+
+
+#include "ExpenseManager.h"
+
+ExpenseManager::ExpenseManager(const QString &filePath)
+    : filePath(filePath), settings(COMPANY_NAME, APP_NAME), saveTimer(new QTimer(this))
+{
+    loadSettings();
+    loadCompressedData();
+    if (expenseList.isEmpty()) { // If no compressed data, load from text file
+        getExpenses();
+    }
+    connect(saveTimer.data(), &QTimer::timeout, this, &ExpenseManager::autoSave);
+    saveTimer->start(60000); // Auto-save every 60 seconds
+}
+
+ExpenseManager::~ExpenseManager()
+{
+    saveCompressedData();
+}
+
+bool ExpenseManager::addExpense(const QString &category, double amount)
+{
+    QFile file(filePath);
+    if (!file.open(QIODevice::Append | QIODevice::Text)) {
+        qWarning() << "Cannot open file for writing:" << file.errorString();
+        return false;
+    }
+    QTextStream out(&file);
+    out << category << "," << amount << "\n";
+    file.close();
+    expenseList.append(qMakePair(category, amount));
+    return true;
+}
+
+QMap<QString, double> ExpenseManager::getExpenses()
+{
+    QMap<QString, double> expenseMap;
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qWarning() << "Cannot open file for reading:" << file.errorString();
+        return expenseMap;
+    }
+    expenseList.clear(); // Clear to avoid duplication
+    QTextStream in(&file);
+    while (!in.atEnd()) {
+        QString line = in.readLine();
+        QStringList parts = line.split(",");
+        if (parts.size() == 2) {
+            QString category = parts[0];
+            double amount = parts[1].toDouble();
+            expenseMap[category] += amount;
+            expenseList.append(qMakePair(category, amount));
+        }
+    }
+    file.close();
+    return expenseMap;
+}
+
+void ExpenseManager::showExpenseSummary()
+{
+    sortExpenses();
+    qDebug() << "Expense Summary:";
+    for (const auto &expense : expenseList) {
+        qDebug() << expense.first << ":" << expense.second;
+    }
+}
+
+void ExpenseManager::saveSettings()
+{
+    settings.setValue("lastUsedFile", filePath);
+    qDebug() << "Settings saved: lastUsedFile =" << filePath;
+}
+
+void ExpenseManager::loadSettings()
+{
+    filePath = settings.value("lastUsedFile", "expenses.txt").toString();
+    qDebug() << "Settings loaded: lastUsedFile =" << filePath;
+}
+
+void ExpenseManager::sortExpenses()
+{
+    std::sort(expenseList.begin(), expenseList.end(), [](const QPair<QString, double> &a, const QPair<QString, double> &b) {
+        return a.second > b.second;
+    });
+}
+
+void ExpenseManager::saveCompressedData()
+{
+    QFile file("expenses.dat");
+    if (!file.open(QIODevice::WriteOnly)) {
+        qWarning() << "Cannot open file for compression:" << file.errorString();
+        return;
+    }
+    QByteArray uncompressedData;
+    QDataStream out(&uncompressedData, QIODevice::WriteOnly);
+    out << expenseList;
+    QByteArray compressedData = qCompress(uncompressedData, 9); // Max compression level
+    file.write(compressedData);
+    file.close();
+    qDebug() << "Compressed data saved.";
+}
+
+void ExpenseManager::loadCompressedData()
+{
+    QFile file("expenses.dat");
+    if (!file.open(QIODevice::ReadOnly)) {
+        qWarning() << "No compressed data found or cannot open file:" << file.errorString();
+        return;
+    }
+    QByteArray compressedData = file.readAll();
+    QByteArray uncompressedData = qUncompress(compressedData);
+    if (uncompressedData.isEmpty()) {
+        qWarning() << "Failed to uncompress data.";
+        return;
+    }
+    QDataStream in(&uncompressedData, QIODevice::ReadOnly);
+    expenseList.clear(); // Clear to avoid mixing old data
+    in >> expenseList;
+    file.close();
+    qDebug() << "Compressed data loaded.";
+}
+
+void ExpenseManager::autoSave()
+{
+    saveCompressedData();
+}
+
+
+
+
+
+
+
+
+#include <QCoreApplication>
+#include "ExpenseManager.h"
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication a(argc, argv);
+
+    QSharedPointer<ExpenseManager> expenseManager = QSharedPointer<ExpenseManager>::create("expenses.txt");
+    expenseManager->addExpense("Food", 12.50);
+    expenseManager->addExpense("Transport", 5.00);
+    expenseManager->addExpense("Entertainment", 20.00);
+
+    expenseManager->showExpenseSummary();
+
+    expenseManager->saveSettings();
+
+    return a.exec();
+}
