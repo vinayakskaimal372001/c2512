@@ -1,0 +1,156 @@
+# QDebug and Logging in Qt
+
+## 1ï¸âƒ£ Introduction to QDebug
+QDebug is a Qt class used for logging and debugging messages in applications. It provides ways to print messages to the console or log files.
+
+### **Why Use QDebug?**
+âœ” Helps in debugging by displaying runtime messages.  
+âœ” Supports different message levels like Debug, Warning, Critical, and Fatal.  
+âœ” Can be redirected to log files for application monitoring.  
+
+## 2ï¸âƒ£ Logging Categories with QLoggingCategory
+Qt provides `QLoggingCategory` to organize logs into categories and enable/disable logging dynamically.
+
+### **Message Levels in Qt**
+| Level          | Purpose |
+|---------------|---------|
+| qDebug()      | General debug messages |
+| qInfo()       | Informational messages |
+| qWarning()    | Warnings that do not stop execution |
+| qCritical()   | Critical errors that need attention |
+| qFatal()      | Fatal errors that cause application crash |
+
+---
+
+## 3ï¸âƒ£ Code: Creating a Logger Class with QLoggingCategory
+
+```cpp
+#include <QCoreApplication>
+#include <QDebug>
+#include <QLoggingCategory>
+
+Q_LOGGING_CATEGORY(network, "app.network")
+Q_LOGGING_CATEGORY(database, "app.database")
+
+void logMessages() {
+    qDebug() << "Debug message: Application started.";
+    qInfo() << "Info message: Configuration loaded.";
+    qWarning() << "Warning message: Low disk space.";
+    qCritical() << "Critical message: Database connection failed.";
+    
+    qCDebug(network) << "Network debug message: Connected to server.";
+    qCWarning(database) << "Database warning: Query execution slow.";
+}
+
+int main(int argc, char *argv[]) {
+    QCoreApplication app(argc, argv);
+    
+    logMessages();
+    
+    return app.exec();
+}
+```
+
+---
+
+## 4ï¸âƒ£ Expected Output:
+
+```
+Debug message: Application started.
+Info message: Configuration loaded.
+Warning message: Low disk space.
+Critical message: Database connection failed.
+app.network.debug: Network debug message: Connected to server.
+app.database.warning: Database warning: Query execution slow.
+```
+
+---
+
+## 5ï¸âƒ£ Explanation:
+1. `Q_LOGGING_CATEGORY(network, "app.network")` creates a logging category for network-related messages.
+2. `qCDebug(network)` logs messages only if the "network" category is enabled.
+3. `qCWarning(database)` logs warnings related to the database.
+4. Messages are categorized and printed based on importance.
+
+---
+
+## 6ï¸âƒ£ Custom Logger Class for File Logging
+
+```cpp
+#include <QCoreApplication>
+#include <QFile>
+#include <QTextStream>
+#include <QDebug>
+
+class Logger {
+public:
+    static void logToFile(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
+        QFile file("application.log");
+        if (!file.open(QIODevice::Append | QIODevice::Text))
+            return;
+
+        QTextStream out(&file);
+        switch (type) {
+            case QtDebugMsg:
+                out << "[DEBUG] " << msg << "
+";
+                break;
+            case QtInfoMsg:
+                out << "[INFO] " << msg << "
+";
+                break;
+            case QtWarningMsg:
+                out << "[WARNING] " << msg << "
+";
+                break;
+            case QtCriticalMsg:
+                out << "[CRITICAL] " << msg << "
+";
+                break;
+            case QtFatalMsg:
+                out << "[FATAL] " << msg << "
+";
+                abort();
+        }
+    }
+};
+
+int main(int argc, char *argv[]) {
+    QCoreApplication app(argc, argv);
+    
+    qInstallMessageHandler(Logger::logToFile);  // Redirect logs to file
+    
+    qDebug() << "This is a debug message.";
+    qInfo() << "This is an info message.";
+    qWarning() << "This is a warning message.";
+    qCritical() << "This is a critical error.";
+    
+    return app.exec();
+}
+```
+
+---
+
+## 7ï¸âƒ£ Expected Output in **application.log**:
+
+```
+[DEBUG] This is a debug message.
+[INFO] This is an info message.
+[WARNING] This is a warning message.
+[CRITICAL] This is a critical error.
+```
+
+---
+
+## 8ï¸âƒ£ Final Exercise: Create a Logger with Configurable Levels
+- Implement a class that logs messages **only above a certain severity level**.
+- Add a **timestamp** to each log message.
+- Allow enabling/disabling of logging categories dynamically.
+
+---
+
+ðŸ”¹ **Key Takeaways**:
+âœ” `QDebug` is used for logging messages in Qt.  
+âœ” `QLoggingCategory` organizes logs into different categories.  
+âœ” A **custom logger** can redirect logs to a file.  
+âœ” Qt provides built-in levels like Debug, Warning, and Critical.  
