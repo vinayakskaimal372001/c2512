@@ -1,0 +1,221 @@
+QT FILE SYSTEM NOTES
+
+==============================
+1ï¸âƒ£ INTRODUCTION TO FILE SYSTEM
+==============================
+- A file system manages how data is stored and retrieved on a storage device.
+- Common file system components:
+  - **Disk Partition & Volume**: Dividing a disk into logical sections.
+  - **Folders & Files**: Organizing data.
+  - **File Formats & Extensions**: Defining file types (.txt, .jpg, .cpp).
+
+==============================
+2ï¸âƒ£ QIODEVICE CLASS (BASE CLASS FOR FILE OPERATIONS)
+==============================
+- `QIODevice` is the base class for all I/O devices (e.g., QFile, QTcpSocket).
+- Common operations:
+  - Open & Close a device.
+  - Read & Write data.
+  - Check file modes (ReadOnly, WriteOnly, ReadWrite).
+
+ðŸ”¹ CODE EXAMPLE:
+----------------------
+#include <QFile>
+#include <QIODevice>
+#include <QDebug>
+
+int main() {
+    QFile file("test.txt");
+    if (file.open(QIODevice::WriteOnly)) {
+        file.write("Hello, Qt!");
+        file.close();
+    }
+    return 0;
+}
+
+==============================
+3ï¸âƒ£ WRITING, APPENDING, AND READING FILES
+==============================
+
+ðŸ”¹ WRITING TO A FILE:
+----------------------
+#include <QFile>
+#include <QDebug>
+
+int main() {
+    QFile file("output.txt");
+    if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        file.write("This is a test file.");
+        file.close();
+    }
+    return 0;
+}
+
+ðŸ”¹ APPENDING TO A FILE:
+----------------------
+QFile file("output.txt");
+if (file.open(QIODevice::Append | QIODevice::Text)) {
+    file.write("\nAppended line.");
+    file.close();
+}
+
+ðŸ”¹ READING A FILE:
+----------------------
+#include <QFile>
+#include <QDebug>
+
+int main() {
+    QFile file("output.txt");
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qDebug() << file.readAll();
+        file.close();
+    }
+    return 0;
+}
+
+==============================
+4ï¸âƒ£ READING LARGE FILES EFFICIENTLY
+==============================
+- Use `QTextStream` instead of `readAll()` to avoid memory issues.
+
+ðŸ”¹ CODE EXAMPLE:
+----------------------
+QFile file("largefile.txt");
+if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+    QTextStream stream(&file);
+    while (!stream.atEnd()) {
+        qDebug() << stream.readLine();
+    }
+    file.close();
+}
+
+==============================
+5ï¸âƒ£ QTEXTSTREAM & QDATASTREAM
+==============================
+ðŸ”¹ `QTextStream` (for text files):
+----------------------
+QTextStream out(&file);
+out << "Text output";
+
+ðŸ”¹ `QDataStream` (for binary files):
+----------------------
+QDataStream out(&file);
+out << 42 << "Binary Data";
+
+==============================
+6ï¸âƒ£ NAVIGATING DIRECTORIES WITH QDIR
+==============================
+ðŸ”¹ LIST FILES IN A DIRECTORY:
+----------------------
+#include <QDir>
+#include <QDebug>
+
+int main() {
+    QDir dir(".");
+    QStringList files = dir.entryList(QDir::Files);
+    qDebug() << "Files:" << files;
+    return 0;
+}
+
+ðŸ”¹ NAVIGATE DIRECTORIES RECURSIVELY:
+----------------------
+QDir dir(".");
+QStringList files = dir.entryList(QDir::Files | QDir::NoDotAndDotDot, QDir::Name);
+for (const QString &file : files) {
+    qDebug() << file;
+}
+
+==============================
+7ï¸âƒ£ QFILEINFO (FILE METADATA) & QSTORAGEINFO (DISK SPACE)
+==============================
+ðŸ”¹ GET FILE INFO:
+----------------------
+QFileInfo fileInfo("test.txt");
+qDebug() << "File Size:" << fileInfo.size();
+qDebug() << "Last Modified:" << fileInfo.lastModified();
+
+ðŸ”¹ GET STORAGE INFO:
+----------------------
+QStorageInfo storage = QStorageInfo::root();
+qDebug() << "Total Space:" << storage.bytesTotal();
+qDebug() << "Free Space:" << storage.bytesAvailable();
+
+==============================
+8ï¸âƒ£ QLOCKFILE (PREVENT FILE ACCESS COLLISIONS)
+==============================
+ðŸ”¹ PREVENT MULTIPLE PROCESSES FROM WRITING TO A FILE:
+----------------------
+#include <QLockFile>
+#include <QDebug>
+
+int main() {
+    QLockFile lockFile("test.lock");
+    if (!lockFile.tryLock(100)) {
+        qDebug() << "File is locked!";
+        return 1;
+    }
+    qDebug() << "File locked successfully.";
+    return 0;
+}
+
+==============================
+9ï¸âƒ£ FINAL EXERCISE (COVERS ALL TOPICS)
+==============================
+
+ðŸ”¹ TASK:
+----------------------
+1. Create a text file.
+2. Append data to it.
+3. Read it efficiently.
+4. Get file metadata.
+5. List all files in the directory.
+6. Display disk space details.
+
+ðŸ”¹ SOLUTION:
+----------------------
+#include <QFile>
+#include <QDir>
+#include <QFileInfo>
+#include <QStorageInfo>
+#include <QDebug>
+
+int main() {
+    QFile file("exercise.txt");
+
+    if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        file.write("Qt File System Exercise");
+        file.close();
+    }
+
+    if (file.open(QIODevice::Append | QIODevice::Text)) {
+        file.write("\nAppending more data");
+        file.close();
+    }
+
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qDebug() << "File Content:" << file.readAll();
+        file.close();
+    }
+
+    QFileInfo fileInfo("exercise.txt");
+    qDebug() << "File Size:" << fileInfo.size();
+    qDebug() << "Last Modified:" << fileInfo.lastModified();
+
+    QDir dir(".");
+    qDebug() << "Files in directory:" << dir.entryList(QDir::Files);
+
+    QStorageInfo storage = QStorageInfo::root();
+    qDebug() << "Total Disk Space:" << storage.bytesTotal();
+    qDebug() << "Free Disk Space:" << storage.bytesAvailable();
+
+    return 0;
+}
+
+==============================
+âœ… COMPLETING THIS EXERCISE ENSURES YOU UNDERSTAND:
+- File reading/writing (QIODevice, QTextStream, QFile).
+- Handling large files.
+- Directory navigation (QDir).
+- File metadata (QFileInfo).
+- Disk storage details (QStorageInfo).
+- Preventing access collisions (QLockFile).
