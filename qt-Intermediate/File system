@@ -76,7 +76,8 @@ int main() {
 ==============================
 4ï¸âƒ£ READING LARGE FILES EFFICIENTLY
 ==============================
-- Use `QTextStream` instead of `readAll()` to avoid memory issues.
+- Use `QTextStream` instead of `readAll()` to avoid memory issues. //line by line read hence ram memory is not that much used
+
 
 ðŸ”¹ CODE EXAMPLE:
 ----------------------
