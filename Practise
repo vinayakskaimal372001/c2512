@@ -1,0 +1,36 @@
+#include <QCoreApplication>
+#include <QList>
+#include <QDebug>
+
+class Employee {
+public:
+    int id;
+    QString name;
+
+    Employee(int id, QString name) : id(id), name(name) {}
+    ~Employee() {
+        qDebug() << "Deleting Employee:" << name;
+    }
+};
+
+int main() {
+    QList<Employee*> empList;
+
+    // Adding dynamically allocated Employee objects
+    empList.append(new Employee(1, "Alice"));
+    empList.append(new Employee(2, "Bob"));
+    empList.append(new Employee(3, "Charlie"));
+
+    qDebug() << "Employee list before deletion:";
+    for (Employee* emp : empList) {
+        qDebug() << emp->id << emp->name;
+    }
+
+    // Using qDeleteAll to delete all employee objects
+    qDeleteAll(empList);
+    empList.clear();  // Clears the list
+
+    qDebug() << "Employee list after deletion. Size:" << empList.size();
+
+    return 0;
+}
