@@ -154,3 +154,77 @@ int main(int argc, char *argv[]) {
 âœ” `QLoggingCategory` organizes logs into different categories.  
 âœ” A **custom logger** can redirect logs to a file.  
 âœ” Qt provides built-in levels like Debug, Warning, and Critical.  
+
+
+
+full prgm
+
+
+
+#include <QCoreApplication>
+#include <QDebug>
+#include <QFile>
+#include <QTextStream>
+#include <QLoggingCategory>
+#include <QDateTime>
+
+// Declare Logging Categories
+QLoggingCategory network("network");
+QLoggingCategory database("database");
+QLoggingCategory security("security");
+
+class Logger {
+public:
+    static void init(const QString &filename);
+    static void logMessage(QtMsgType type, const QMessageLogContext &context, const QString &msg);
+private:
+    static QFile logFile;
+};
+
+// Define Static Log File
+QFile Logger::logFile;
+
+void Logger::init(const QString &filename) {
+    logFile.setFileName(filename);
+    if (!logFile.open(QIODevice::Append | QIODevice::Text)) {
+        qDebug() << "Error: Cannot open log file!";
+    } else {
+        qDebug() << "Logging initialized in file:" << filename;
+    }
+    qInstallMessageHandler(logMessage); // Redirect Qt logging
+}
+
+void Logger::logMessage(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
+    QTextStream out(&logFile);
+    QString logLevel;
+
+    switch (type) {
+        case QtDebugMsg:    logLevel = "[DEBUG]"; break;
+        case QtInfoMsg:     logLevel = "[INFO]"; break;
+        case QtWarningMsg:  logLevel = "[WARNING]"; break;
+        case QtCriticalMsg: logLevel = "[CRITICAL]"; break;
+        case QtFatalMsg:    logLevel = "[FATAL]"; break;
+    }
+
+    out << QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss") << " " 
+        << logLevel << " " << msg << "\n";
+    out.flush(); // Ensure data is written immediately
+}
+
+int main(int argc, char *argv[]) {
+    QCoreApplication app(argc, argv);
+
+    Logger::init("log.txt"); // Initialize Logger
+
+    qDebug() << "Application started";
+    qInfo() << "This is an info message";
+    qWarning() << "Low memory warning";
+    qCritical() << "Critical failure detected!";
+
+    qCInfo(network) << "Network connected successfully";
+    qCWarning(database) << "Database connection slow";
+    qCCritical(security) << "Security breach detected!";
+
+    return app.exec();
+}
+
