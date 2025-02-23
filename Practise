@@ -34,3 +34,44 @@ int main() {
 
     return 0;
 }
+
+
+
+
+
+#include <QCoreApplication>
+#include <QList>
+#include <QSharedPointer>
+#include <QDebug>
+
+class Employee {
+public:
+    int id;
+    QString name;
+
+    Employee(int id, QString name) : id(id), name(name) {}
+    ~Employee() {
+        qDebug() << "Deleting Employee:" << name;
+    }
+};
+
+int main() {
+    QList<QSharedPointer<Employee>> empList;
+
+    // Using QSharedPointer to manage Employee objects
+    empList.append(QSharedPointer<Employee>::create(1, "Alice"));
+    empList.append(QSharedPointer<Employee>::create(2, "Bob"));
+    empList.append(QSharedPointer<Employee>::create(3, "Charlie"));
+
+    qDebug() << "Employee list before clearing:";
+    for (const auto& emp : empList) {
+        qDebug() << emp->id << emp->name;
+    }
+
+    // No need to call qDeleteAll(), QSharedPointer will handle deletion
+    empList.clear();
+
+    qDebug() << "Employee list cleared. Size:" << empList.size();
+
+    return 0;
+}
