@@ -114,6 +114,26 @@ int main() {
 }
 
 
+#include <QCoreApplication>
+#include <QByteArray>
+#include <QByteArrayView>
+#include <QDebug>
+
+void printData(QByteArrayView data) {
+    qDebug() << "Data size:" << data.size();
+    qDebug() << "First byte:" << data.at(0);
+}
+
+int main() {
+    QByteArray byteArray = "Hello, QByteArrayView!";
+    printData(byteArray);  // Implicit conversion to QByteArrayView
+
+    const char rawData[] = "Raw C-style string";
+    printData(QByteArrayView(rawData, sizeof(rawData)));  // Using raw data
+
+    return 0;
+}
+
 
 #include <QMap>
 #include <QSharedPointer>
@@ -144,6 +164,26 @@ int main() {
     empMap.clear();
 
     qDebug() << "After clearing, size:" << empMap.size();
+
+    return 0;
+}
+
+
+#include <QCoreApplication>
+#include <QStringView>
+#include <QString>
+#include <QDebug>
+
+void printString(QStringView strView) {
+    qDebug() << "Length:" << strView.length();
+    qDebug() << "First char:" << strView.at(0);
+}
+
+int main() {
+    QString text = "Hello, QStringView!";
+    printString(text);  // Implicit conversion from QString
+
+    printString(QStringView(text).mid(7, 10));  // View over a substring
 
     return 0;
 }
