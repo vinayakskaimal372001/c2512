@@ -75,3 +75,75 @@ int main() {
 
     return 0;
 }
+
+
+
+
+#include <QMap>
+#include <QString>
+#include <QDebug>
+
+class Employee {
+public:
+    int id;
+    QString name;
+
+    Employee(int id, QString name) : id(id), name(name) {}
+    ~Employee() { qDebug() << "Deleting Employee:" << name; }
+};
+
+int main() {
+    QMap<int, Employee*> empMap;
+
+    empMap.insert(1, new Employee(1, "Alice"));
+    empMap.insert(2, new Employee(2, "Bob"));
+    empMap.insert(3, new Employee(3, "Charlie"));
+
+    qDebug() << "Before deleting:";
+    for (auto it = empMap.begin(); it != empMap.end(); ++it) {
+        qDebug() << it.key() << it.value()->name;
+    }
+
+    // Manually delete all allocated Employee objects
+    qDeleteAll(empMap);
+    empMap.clear();  // Clear the map after deleting elements
+
+    qDebug() << "After clearing, size:" << empMap.size();
+
+    return 0;
+}
+
+
+
+#include <QMap>
+#include <QSharedPointer>
+#include <QDebug>
+
+class Employee {
+public:
+    int id;
+    QString name;
+
+    Employee(int id, QString name) : id(id), name(name) {}
+    ~Employee() { qDebug() << "Deleting Employee:" << name; }
+};
+
+int main() {
+    QMap<int, QSharedPointer<Employee>> empMap;
+
+    empMap.insert(1, QSharedPointer<Employee>::create(1, "Alice"));
+    empMap.insert(2, QSharedPointer<Employee>::create(2, "Bob"));
+    empMap.insert(3, QSharedPointer<Employee>::create(3, "Charlie"));
+
+    qDebug() << "Before clearing:";
+    for (auto it = empMap.begin(); it != empMap.end(); ++it) {
+        qDebug() << it.key() << it.value()->name;
+    }
+
+    // No need to call qDeleteAll, just clear the map
+    empMap.clear();
+
+    qDebug() << "After clearing, size:" << empMap.size();
+
+    return 0;
+}
