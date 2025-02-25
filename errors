@@ -74,6 +74,47 @@ Signals and slots facilitate communication between threads.
 The thread starts execution when QThread::start() is called.
 
 
+ MoveToThread
+Concept: Move a QObject worker to a separate thread to run its slots there. Ideal for offloading work without subclassing QThread.
+Code:
+#include <QObject>
+#include <QThread>
+#include <QDebug>
+
+class Worker : public QObject {
+    Q_OBJECT
+public slots:
+    void doWork() {
+        qDebug() << "Working in thread:" << QThread::currentThreadId();
+        for (int i = 0; i < 3; ++i) {
+            qDebug() << "Work step" << i;
+            QThread::sleep(1);
+        }
+        emit finished();
+    }
+signals:
+    void finished();
+};
+
+int main() {
+    QThread thread;
+    Worker worker;
+    worker.moveToThread(&thread); //worker class slots run in the differnt thread rest const and destructor on main thread
+QObject::connect(&thread, &QThread::started, &worker, &Worker::doWork);
+    QObject::connect(&worker, &Worker::finished, &thread, &QThread::quit);
+    thread.start();
+    thread.wait();
+    return 0;
+}
+Output:
+Working in thread: 0x<thread_id>
+Work step 0
+Work step 1
+Work step 2
+
+
+
+---
 
 ---
 
@@ -103,6 +144,78 @@ Not recommended for general use due to potential misuse (e.g., calling exec() in
 
 
 
+Subclass QThread
+Concept: Subclass QThread and override run() to define thread behavior. Only run() executes in the new thread.
+Code:
+#include <QThread>
+#include <QDebug>
+
+class MyThread : public QThread {
+    Q_OBJECT
+protected:
+    void run() override {
+        qDebug() << "Thread ID:" << QThread::currentThreadId();
+        for (int i = 0; i < 3; ++i) {
+            qDebug() << "Step" << i;
+            sleep(1);
+        }
+    }
+};
+
+int main() {
+    MyThread thread;
+    thread.start();
+    thread.wait();
+    return 0;
+}
+Output:
+Thread ID: 0x<thread_id>
+Step 0
+Step 1
+Step 2
+
+#ifndef MYTHREAD_H
+#define MYTHREAD_H
+
+#include <QObject>
+#include <QThread>
+#include <QDebug>
+
+class MyThread : public QThread
+{
+    Q_OBJECT
+protected:
+
+    void run() override {
+        qDebug() << "Thread ID:" << QThread::currentThreadId();
+        for (int i = 0; i < 3; ++i) {
+            qDebug() << "Step" << i;
+            QThread::sleep(1);
+        }
+    }
+
+public:
+    void display(){
+
+        qDebug()<<"hello display here!! " << QThread::currentThreadId();
+
+    }
+};
+
+#endif // MYTHREAD_H
+
+
+
+
+
+hello world!!  0x7524
+hello display here!!  0x7524
+Thread ID: 0x72bc
+Step 0
+Step 1
+Step 2
+Press <RETURN> to close this window...
+
 ---
 
 3. QThread::create
@@ -127,6 +240,27 @@ Easier to use than subclassing QThread.
 
 Automatically cleans up after execution.
 
+ QThread with Asynchronous Code – QThread::create
+Concept: Use QThread::create to run a function in a thread. Simplifies one-off async tasks (Qt 5.10+).
+Code:
+#include <QThread>
+#include <QDebug>
+
+void workFunction() {
+    qDebug() << "Async work in thread:" << QThread::currentThreadId();
+    QThread::sleep(2);
+}
+
+int main() {
+    QThread* thread = QThread::create(workFunction);
+    thread->start();
+    thread->wait();
+    delete thread;
+    return 0;
+}
+Output:
+Async work in thread: 0x<thread_id>
+
 
 
 ---
@@ -145,13 +279,50 @@ Use Case:
 When results need to be processed asynchronously in the main thread.
 
 
+
+4. QThread with Asynchronous Code – MoveToThread
+Concept: Use MoveToThread with signals for async-like behavior. Worker slots run in the thread, signals communicate results.
+Code:
+
+
+#include <QObject>
+#include <QThread>
+#include <QDebug>
+
+class Worker : public QObject {
+    Q_OBJECT
+public slots:
+    void doWork() {
+        qDebug() << "Async-like work";
+        QThread::sleep(1);
+        emit resultReady(42);
+    }
+signals:
+    void resultReady(int result);
+};
+
+int main() {
+    QThread thread;
+    Worker worker;
+    worker.moveToThread(&thread);
+    QObject::connect(&thread, &QThread::started, &worker, &Worker::doWork);
+    QObject::connect(&worker, &Worker::resultReady, [](int r) { qDebug() << "Result:" << r; });
+    QObject::connect(&worker, &Worker::resultReady, &thread, &QThread::quit);
+    thread.start();
+    thread.wait();
+    return 0;
+}
+Output:
+Async-like work
+Result: 42
+
+
+
 Key Points:
 
 Useful for GUI applications where work must be done in a thread, but UI updates should remain in the main thread.
 
 Signals handle result communication.
-
-
 
 ---
 
@@ -174,6 +345,40 @@ emit is used to send signals from the thread to the main thread.
 run() still controls the execution.
 
 The main thread connects to signals to receive progress updates.
+
+
+5. QThread with Asynchronous Code – Subclass Thread
+Concept: Subclass QThread and use signals for async feedback from the thread to the main app.
+Code:
+#include <QThread>
+#include <QDebug>
+
+class MyThread : public QThread {
+    Q_OBJECT
+signals:
+    void progress(int value);
+protected:
+    void run() override {
+        for (int i = 0; i <= 100; i += 25) {
+            emit progress(i);
+            sleep(1);
+        }
+    }
+};
+
+int main() {
+    MyThread thread;
+    QObject::connect(&thread, &MyThread::progress, [](int p) { qDebug() << "Progress:" << p; });
+    thread.start();
+    thread.wait();
+    return 0;
+}
+Output:
+Progress: 0
+Progress: 25
+Progress: 50
+Progress: 75
+Progress: 100
 
 
 
@@ -202,6 +407,31 @@ Prevents thread creation overhead by reusing threads.
 Can run multiple tasks simultaneously.
 
 QThreadPool::start() executes a QRunnable object.
+
+
+ ThreadPool and QRunnable
+Concept: QThreadPool manages a pool of threads; QRunnable defines reusable tasks. Good for multiple small jobs.
+Code:
+#include <QThreadPool>
+#include <QRunnable>
+#include <QDebug>
+
+class MyRunnable : public QRunnable {
+    void run() override {
+        qDebug() << "Runnable in thread:" << QThread::currentThreadId();
+        QThread::sleep(1);
+    }
+};
+
+int main() {
+    QThreadPool pool;
+    pool.setMaxThreadCount(2);
+    pool.start(new MyRunnable);
+    pool.waitForDone();
+    return 0;
+}
+Output:
+Runnable in thread: 0x<thread_id>
 
 
 
@@ -302,195 +532,25 @@ Notes for learning threading in Qt with concepts, code, and output.
 
 ---
 
-1. MoveToThread
-Concept: Move a QObject worker to a separate thread to run its slots there. Ideal for offloading work without subclassing QThread.
-Code:
-#include <QObject>
-#include <QThread>
-#include <QDebug>
-
-class Worker : public QObject {
-    Q_OBJECT
-public slots:
-    void doWork() {
-        qDebug() << "Working in thread:" << QThread::currentThreadId();
-        for (int i = 0; i < 3; ++i) {
-            qDebug() << "Work step" << i;
-            QThread::sleep(1);
-        }
-        emit finished();
-    }
-signals:
-    void finished();
-};
-
-int main() {
-    QThread thread;
-    Worker worker;
-    worker.moveToThread(&thread);
-    QObject::connect(&thread, &QThread::started, &worker, &Worker::doWork);
-    QObject::connect(&worker, &Worker::finished, &thread, &QThread::quit);
-    thread.start();
-    thread.wait();
-    return 0;
-}
-Output:
-Working in thread: 0x<thread_id>
-Work step 0
-Work step 1
-Work step 2
 
 ---
 
-2. Subclass QThread
-Concept: Subclass QThread and override run() to define thread behavior. Only run() executes in the new thread.
-Code:
-#include <QThread>
-#include <QDebug>
 
-class MyThread : public QThread {
-    Q_OBJECT
-protected:
-    void run() override {
-        qDebug() << "Thread ID:" << QThread::currentThreadId();
-        for (int i = 0; i < 3; ++i) {
-            qDebug() << "Step" << i;
-            sleep(1);
-        }
-    }
-};
-
-int main() {
-    MyThread thread;
-    thread.start();
-    thread.wait();
-    return 0;
-}
-Output:
-Thread ID: 0x<thread_id>
-Step 0
-Step 1
-Step 2
 
 ---
 
-3. QThread with Asynchronous Code – QThread::create
-Concept: Use QThread::create to run a function in a thread. Simplifies one-off async tasks (Qt 5.10+).
-Code:
-#include <QThread>
-#include <QDebug>
 
-void workFunction() {
-    qDebug() << "Async work in thread:" << QThread::currentThreadId();
-    QThread::sleep(2);
-}
-
-int main() {
-    QThread* thread = QThread::create(workFunction);
-    thread->start();
-    thread->wait();
-    delete thread;
-    return 0;
-}
-Output:
-Async work in thread: 0x<thread_id>
 
 ---
 
-4. QThread with Asynchronous Code – MoveToThread
-Concept: Use MoveToThread with signals for async-like behavior. Worker slots run in the thread, signals communicate results.
-Code:
-#include <QObject>
-#include <QThread>
-#include <QDebug>
 
-class Worker : public QObject {
-    Q_OBJECT
-public slots:
-    void doWork() {
-        qDebug() << "Async-like work";
-        QThread::sleep(1);
-        emit resultReady(42);
-    }
-signals:
-    void resultReady(int result);
-};
-
-int main() {
-    QThread thread;
-    Worker worker;
-    worker.moveToThread(&thread);
-    QObject::connect(&thread, &QThread::started, &worker, &Worker::doWork);
-    QObject::connect(&worker, &Worker::resultReady, [](int r) { qDebug() << "Result:" << r; });
-    QObject::connect(&worker, &Worker::resultReady, &thread, &QThread::quit);
-    thread.start();
-    thread.wait();
-    return 0;
-}
-Output:
-Async-like work
-Result: 42
 
 ---
 
-5. QThread with Asynchronous Code – Subclass Thread
-Concept: Subclass QThread and use signals for async feedback from the thread to the main app.
-Code:
-#include <QThread>
-#include <QDebug>
-
-class MyThread : public QThread {
-    Q_OBJECT
-signals:
-    void progress(int value);
-protected:
-    void run() override {
-        for (int i = 0; i <= 100; i += 25) {
-            emit progress(i);
-            sleep(1);
-        }
-    }
-};
-
-int main() {
-    MyThread thread;
-    QObject::connect(&thread, &MyThread::progress, [](int p) { qDebug() << "Progress:" << p; });
-    thread.start();
-    thread.wait();
-    return 0;
-}
-Output:
-Progress: 0
-Progress: 25
-Progress: 50
-Progress: 75
-Progress: 100
 
 ---
 
-6. ThreadPool and QRunnable
-Concept: QThreadPool manages a pool of threads; QRunnable defines reusable tasks. Good for multiple small jobs.
-Code:
-#include <QThreadPool>
-#include <QRunnable>
-#include <QDebug>
 
-class MyRunnable : public QRunnable {
-    void run() override {
-        qDebug() << "Runnable in thread:" << QThread::currentThreadId();
-        QThread::sleep(1);
-    }
-};
-
-int main() {
-    QThreadPool pool;
-    pool.setMaxThreadCount(2);
-    pool.start(new MyRunnable);
-    pool.waitForDone();
-    return 0;
-}
-Output:
-Runnable in thread: 0x<thread_id>
 
 ---
 
