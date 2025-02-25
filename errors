@@ -1,3 +1,77 @@
+
+
+
+
+
+#include <QCoreApplication>
+#include <QThread>
+#include <QThreadPool>
+#include <QRunnable>
+#include <QDebug>
+#include <QElapsedTimer>
+
+// WorkerThread using QThread
+class WorkerThread : public QThread {
+protected:
+    void run() override {
+        qDebug() << "QThread running on thread:" << QThread::currentThread();
+        QThread::sleep(2);  // Simulating a long-running task
+    }
+};
+
+// TaskRunner using QThreadPool
+class TaskRunner : public QRunnable {
+public:
+    void run() override {
+        qDebug() << "QRunnable running on thread:" << QThread::currentThread();
+        QThread::sleep(2);  // Simulating a long-running task
+    }
+};
+
+int main(int argc, char *argv[]) {
+    QCoreApplication app(argc, argv);
+
+    QElapsedTimer timer;
+
+    // **1. QThread Execution**
+    timer.start();
+    WorkerThread *thread1 = new WorkerThread();
+    WorkerThread *thread2 = new WorkerThread();
+
+    thread1->start();
+    thread2->start();
+
+    thread1->wait();
+    thread2->wait();
+
+    delete thread1;
+    delete thread2;
+    qDebug() << "QThread Execution Time:" << timer.elapsed() << "ms";
+
+    // **2. QThreadPool Execution**
+    timer.restart();
+    QThreadPool *pool = QThreadPool::globalInstance();
+
+    TaskRunner *task1 = new TaskRunner();
+    TaskRunner *task2 = new TaskRunner();
+
+    task1->setAutoDelete(true);
+    task2->setAutoDelete(true);
+
+    pool->start(task1);
+    pool->start(task2);
+
+    pool->waitForDone();
+    qDebug() << "QThreadPool Execution Time:" << timer.elapsed() << "ms";
+
+    return 0;
+}
+
+
+
+
+------------------
+
 #include "widget.h"
 #include "ui_widget.h"
 #include <QDebug>
