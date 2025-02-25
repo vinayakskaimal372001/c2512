@@ -1,0 +1,64 @@
+Need code so that it works on qt 5.14.2
+Exercise 3: Multi-threading and Thread Pools
+Objective: Implement multi-threading using QThread and QThreadPool.
+Requirements:
+• Implement a WorkerThread class that inherits from QThread to simulate a long-running task. • Implement a TaskRunner class that uses QRunnable to execute multiple tasks in parallel using QThreadPool.
+• Compare execution times of both approaches
+
+
+
+
+
+
+
+#include <QCoreApplication>
+#include <QThread>
+#include <QThreadPool>
+#include <QRunnable>
+#include <QDebug>
+#include <QElapsedTimer>
+
+// WorkerThread class using QThread
+class WorkerThread : public QThread {
+protected:
+    void run() override {
+        qDebug() << "WorkerThread running in thread:" << QThread::currentThread();
+        QThread::sleep(2);  // Simulating long task
+    }
+};
+
+// TaskRunner class using QRunnable
+class TaskRunner : public QRunnable {
+public:
+    void run() override {
+        qDebug() << "TaskRunner running in thread:" << QThread::currentThread();
+        QThread::sleep(2);  // Simulating long task
+    }
+};
+
+int main(int argc, char *argv[]) {
+    QCoreApplication app(argc, argv);
+
+    QElapsedTimer timer;
+    
+    // Using QThread
+    timer.start();
+    WorkerThread thread1, thread2;
+    thread1.start();
+    thread2.start();
+    thread1.wait();
+    thread2.wait();
+    qDebug() << "QThread execution time (ms):" << timer.elapsed();
+    
+    // Using QThreadPool
+    timer.start();
+    QThreadPool::globalInstance()->setMaxThreadCount(2);
+    TaskRunner *task1 = new TaskRunner();
+    TaskRunner *task2 = new TaskRunner();
+    QThreadPool::globalInstance()->start(task1);
+    QThreadPool::globalInstance()->start(task2);
+    QThreadPool::globalInstance()->waitForDone();
+    qDebug() << "QThreadPool execution time (ms):" << timer.elapsed();
+
+    return 0;
+}
