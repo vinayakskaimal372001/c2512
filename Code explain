@@ -1,0 +1,198 @@
+### Explanation of Each Line and Program Flow
+
+---
+
+### 1ï¸âƒ£ Header Files
+
+```cpp
+#include <QCoreApplication>
+#include <QThread>
+#include <QThreadPool>
+#include <QRunnable>
+#include <QDebug>
+#include <QElapsedTimer>
+```
+- `#include <QCoreApplication>` â†’ Required to create a **Qt console application**. This manages event loops and application lifetime.  
+- `#include <QThread>` â†’ Provides a way to manage separate threads of execution.  
+- `#include <QThreadPool>` â†’ Manages a pool of worker threads for efficient parallel execution.  
+- `#include <QRunnable>` â†’ Used to create lightweight, reusable tasks that can be run by `QThreadPool`.  
+- `#include <QDebug>` â†’ Provides logging utilities to print debugging messages.  
+- `#include <QElapsedTimer>` â†’ Measures elapsed time between two points for performance comparison.  
+
+---
+
+### 2ï¸âƒ£ Defining `WorkerThread` using `QThread` (Explicit Thread Management)
+
+```cpp
+class WorkerThread : public QThread {
+protected:
+    void run() override {
+        qDebug() << "QThread running on thread:" << QThread::currentThread();
+        QThread::sleep(2);  // Simulating a long-running task
+    }
+};
+```
+- This class **inherits** from `QThread`, making it an independent thread.  
+- **`run()`** is overridden:
+  - `qDebug() << "QThread running on thread:" << QThread::currentThread();`
+    - Prints the thread ID to confirm that it's running on a separate thread.
+  - `QThread::sleep(2);`
+    - Simulates a long-running task by pausing for **2 seconds**.
+- When `start()` is called on an instance of `WorkerThread`, the `run()` method executes **in a separate thread**.  
+
+---
+
+### 3ï¸âƒ£ Defining `TaskRunner` using `QRunnable` (Thread Pool Execution)
+
+```cpp
+class TaskRunner : public QRunnable {
+public:
+    void run() override {
+        qDebug() << "QRunnable running on thread:" << QThread::currentThread();
+        QThread::sleep(2);  // Simulating a long-running task
+    }
+};
+```
+- This class **inherits** from `QRunnable`, which is designed for lightweight, re-usable tasks.  
+- **`run()`** is overridden:
+  - `qDebug() << "QRunnable running on thread:" << QThread::currentThread();`
+    - Prints the thread ID to verify that it runs inside `QThreadPool`.
+  - `QThread::sleep(2);`
+    - Simulates a long-running task (same as `QThread`).  
+- This **does not** use `start()`. Instead, it is submitted to `QThreadPool`, which automatically assigns it to an available thread.  
+
+---
+
+### 4ï¸âƒ£ `main()` Function - Execution Flow
+
+```cpp
+int main(int argc, char *argv[]) {
+    QCoreApplication app(argc, argv);
+```
+- Initializes the Qt **event loop** and application.  
+- Required for `QThreadPool` and `QRunnable` to function correctly.  
+
+---
+
+### 5ï¸âƒ£ Measuring Execution Time for `QThread`
+
+```cpp
+    QElapsedTimer timer;
+    timer.start();
+```
+- **`QElapsedTimer`** is used to measure how long each approach takes.  
+- `timer.start();` begins the timer before executing the threads.  
+
+#### Creating and Running `WorkerThread` Instances
+```cpp
+    WorkerThread *thread1 = new WorkerThread();
+    WorkerThread *thread2 = new WorkerThread();
+
+    thread1->start();
+    thread2->start();
+```
+- **Creates two worker threads** (`thread1`, `thread2`).  
+- **Calls `start()`**, which internally calls `run()` on separate threads.  
+
+#### Waiting for Threads to Complete
+```cpp
+    thread1->wait();
+    thread2->wait();
+```
+- **Blocks** the main thread until both `thread1` and `thread2` **finish execution**.  
+- Ensures that `QThread` execution completes before moving forward.  
+
+#### Cleaning Up Memory
+```cpp
+    delete thread1;
+    delete thread2;
+```
+- Since `WorkerThread` objects were created with `new`, they **must be deleted** manually.  
+- Prevents memory leaks.  
+
+#### Logging Execution Time
+```cpp
+    qDebug() << "QThread Execution Time:" << timer.elapsed() << "ms";
+```
+- **Prints the time taken** by `QThread` execution in milliseconds.  
+
+---
+
+### 6ï¸âƒ£ Measuring Execution Time for `QThreadPool`
+
+```cpp
+    timer.restart();
+```
+- Resets the timer before starting `QThreadPool` execution.  
+
+#### Using `QThreadPool` for Parallel Execution
+```cpp
+    QThreadPool *pool = QThreadPool::globalInstance();
+```
+- **`QThreadPool::globalInstance()`** returns a shared thread pool instance.  
+- Manages multiple background tasks efficiently.  
+
+#### Creating and Submitting Tasks
+```cpp
+    TaskRunner *task1 = new TaskRunner();
+    TaskRunner *task2 = new TaskRunner();
+
+    pool->start(task1);
+    pool->start(task2);
+```
+- Creates two `TaskRunner` objects.  
+- Submits them to `QThreadPool`, which automatically assigns them to available threads.  
+
+#### Waiting for `QThreadPool` to Complete
+```cpp
+    pool->waitForDone();
+```
+- **Blocks** execution until all submitted tasks **finish execution**.  
+- Ensures `QThreadPool` tasks complete before moving forward.  
+
+#### Logging Execution Time
+```cpp
+    qDebug() << "QThreadPool Execution Time:" << timer.elapsed() << "ms";
+```
+- **Prints the execution time** taken by `QThreadPool`.  
+
+---
+
+### ðŸ”¹ Program Flow Summary
+1ï¸âƒ£ **Application Starts**  
+- `QCoreApplication` initializes the Qt event loop.  
+
+2ï¸âƒ£ **QThread Execution**  
+- Two `WorkerThread` instances are created and started.  
+- They execute **on separate threads** and take **~2 seconds**.  
+- The `main()` thread waits for them to finish before continuing.  
+- Execution time is logged.  
+
+3ï¸âƒ£ **QThreadPool Execution**  
+- Two `TaskRunner` instances are submitted to `QThreadPool`.  
+- `QThreadPool` assigns them to available threads.  
+- The `main()` thread waits for all tasks to finish.  
+- Execution time is logged.  
+
+4ï¸âƒ£ **Program Ends**  
+
+---
+
+### ðŸ”¹ Comparison: QThread vs. QThreadPool
+| Feature          | `QThread`                          | `QThreadPool`                       |
+|-----------------|----------------------------------|----------------------------------|
+| **Thread Management** | Explicit (`start()`, `wait()`, `delete`) | Managed automatically |
+| **Overhead**    | High (each thread is separate) | Low (threads are reused) |
+| **Best for**    | Long-running tasks, event loops | Short, parallel tasks |
+| **Memory Usage** | Higher (new thread for each task) | Lower (reuses existing threads) |
+
+---
+
+### âœ… Key Takeaways
+- **Use `QThread` when**:
+  - You need a **dedicated** thread for long-running operations.
+  - You need an **event loop** in the thread (e.g., handling signals/slots).
+  
+- **Use `QThreadPool` when**:
+  - You need to execute **many short-lived tasks** efficiently.
+  - You want to **reuse** threads without creating/destroying them.
